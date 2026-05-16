@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
  
   // App Info
-  static const String appName        = 'Health Card';
+  static const String appName        = 'CarePass';
   static const String appVersion     = '1.0.0';
   static const String appDescription = 'Quality Care for Less';
  

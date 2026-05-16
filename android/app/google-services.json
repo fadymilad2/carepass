@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "375138173967",
+    "project_id": "carepass-b0220",
+    "storage_bucket": "carepass-b0220.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375138173967:android:50d6e29e7d336884524f7a",
+        "android_client_info": {
+          "package_name": "com.example.carepass"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUvIUFW3u6hXY1DMJdrRrK2DScOfhc7JQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

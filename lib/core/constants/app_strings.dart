@@ -1,11 +1,8 @@
-// ─────────────────────────────────────────────
-//  App Strings (English Only)
-// ─────────────────────────────────────────────
 class AppStrings {
   AppStrings._();
 
   // Common
-  static const String appName        = 'Health Card';
+  static const String appName        = 'CarePass';
   static const String loading        = 'Loading...';
   static const String retry          = 'Retry';
   static const String cancel         = 'Cancel';

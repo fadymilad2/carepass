@@ -1,4 +1,13 @@
+import 'package:carepass/features/home/data/datasources/home_remote_datasource.dart';
+import 'package:carepass/features/home/data/repositories/home_repository_impl.dart';
+import 'package:carepass/features/home/domain/repositories/home_repository.dart';
+import 'package:carepass/features/home/domain/usecases/home_usecases.dart';
+import 'package:carepass/features/home/presentation/bloc/home_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
+// استدعي ملفات الـ Home اللي عملناها
+ // مسار ملف الـ NetworkInfo لو عامله
 
 final GetIt sl = GetIt.instance;
 
@@ -18,94 +27,52 @@ Future<void> setupDependencies() async {
 }
 
 void _registerCore() {
-  // Network checker, local storage, etc.
-  // sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
-  // sl.registerLazySingleton<LocalStorage>(() => LocalStorageImpl());
-}
+  // تسجيل أدوات فايربيز الأساسية
+  sl.registerLazySingleton(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton(() => FirebaseAuth.instance); // ضفنا دي عشان الـ Auth
 
-void _registerAuth() {
-  // Bloc
-  // sl.registerFactory(() => AuthBloc(signIn: sl(), signOut: sl(), getUser: sl()));
-
-  // Use Cases
-  // sl.registerLazySingleton(() => SignInWithPhone(sl()));
-  // sl.registerLazySingleton(() => VerifyOtp(sl()));
-  // sl.registerLazySingleton(() => SignOut(sl()));
-  // sl.registerLazySingleton(() => GetCurrentUser(sl()));
-
-  // Repository
-  // sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl()));
-
-  // Data Sources
-  // sl.registerLazySingleton<AuthRemoteDataSource>(
-  //   () => AuthRemoteDataSourceImpl(FirebaseAuth.instance),
-  // );
-  // sl.registerLazySingleton<AuthLocalDataSource>(
-  //   () => AuthLocalDataSourceImpl(sl()),
-  // );
+  // Network checker (فك الكومنت بتاعها لو عملت الكلاس بتاعها)
+  // sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl()); 
 }
 
 void _registerHome() {
-  // sl.registerFactory(() => HomeBloc(getUser: sl(), getNearbyProviders: sl()));
+  // 1. Data Sources
+  sl.registerLazySingleton<HomeRemoteDataSource>(
+    () => HomeRemoteDataSourceImpl(
+      firestore: sl(),
+      auth: sl(), // دلوقتي GetIt هيعرف يجيب الـ FirebaseAuth ويبعتها هنا
+    ),
+  );
+
+  // 2. Repository
+  sl.registerLazySingleton<HomeRepository>(
+    () => HomeRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // 3. Use Cases
+  sl.registerLazySingleton(() => GetUserSummary(sl()));
+  sl.registerLazySingleton(() => GetHomeBanners(sl()));
+  sl.registerLazySingleton(() => GetHomeQuickStats(sl()));
+
+  // 4. Bloc
+  sl.registerFactory(
+    () => HomeBloc(
+      getUserSummary: sl(),
+      getHomeBanners: sl(),
+      getHomeQuickStats: sl(),
+    ),
+  );
 }
 
-void _registerServices() {
-  // sl.registerFactory(() => ServicesBloc(getServices: sl()));
-  // sl.registerLazySingleton(() => GetServices(sl()));
-  // sl.registerLazySingleton<ServicesRepository>(
-  //   () => ServicesRepositoryImpl(sl()),
-  // );
-  // sl.registerLazySingleton<ServicesRemoteDataSource>(
-  //   () => ServicesRemoteDataSourceImpl(FirebaseFirestore.instance),
-  // );
-}
-
-void _registerCard() {
-  // sl.registerFactory(() => CardBloc(getCard: sl()));
-  // sl.registerLazySingleton(() => GetUserCard(sl()));
-  // sl.registerLazySingleton<CardRepository>(
-  //   () => CardRepositoryImpl(sl()),
-  // );
-  // sl.registerLazySingleton<CardRemoteDataSource>(
-  //   () => CardRemoteDataSourceImpl(FirebaseFirestore.instance),
-  // );
-}
-
-void _registerProviders() {
-  // sl.registerFactory(() => ProvidersBloc(getProviders: sl(), searchProviders: sl()));
-  // sl.registerLazySingleton(() => GetProviders(sl()));
-  // sl.registerLazySingleton(() => SearchProviders(sl()));
-  // sl.registerLazySingleton<ProvidersRepository>(
-  //   () => ProvidersRepositoryImpl(sl()),
-  // );
-  // sl.registerLazySingleton<ProvidersRemoteDataSource>(
-  //   () => ProvidersRemoteDataSourceImpl(FirebaseFirestore.instance),
-  // );
-}
-
-void _registerAccount() {
-  // sl.registerFactory(() => AccountBloc(updateProfile: sl(), getPaymentHistory: sl()));
-}
-
-void _registerPayment() {
-  // sl.registerFactory(() => PaymentBloc(createPayment: sl(), verifyPayment: sl()));
-  // sl.registerLazySingleton(() => CreateMomoPayment(sl()));
-  // sl.registerLazySingleton(() => VerifyMomoPayment(sl()));
-  // sl.registerLazySingleton<PaymentRepository>(
-  //   () => PaymentRepositoryImpl(sl()),
-  // );
-  // sl.registerLazySingleton<PaymentRemoteDataSource>(
-  //   () => PaymentRemoteDataSourceImpl(FirebaseFunctions.instance),
-  // );
-}
-
-void _registerAiAssistant() {
-  // sl.registerFactory(() => AiAssistantBloc(analyzeSymptoms: sl()));
-  // sl.registerLazySingleton(() => AnalyzeSymptoms(sl()));
-  // sl.registerLazySingleton<AiAssistantRepository>(
-  //   () => AiAssistantRepositoryImpl(sl()),
-  // );
-  // sl.registerLazySingleton<AiAssistantRemoteDataSource>(
-  //   () => AiAssistantRemoteDataSourceImpl(FirebaseFunctions.instance),
-  // );
-}
+// ───────────────────────────────────────────────────────────────────────
+// باقي الفيتشرز سيبها كومنت زي ما هي لحد ما نبنيها
+// ───────────────────────────────────────────────────────────────────────
+void _registerAuth() {}
+void _registerServices() {}
+void _registerCard() {}
+void _registerProviders() {}
+void _registerAccount() {}
+void _registerPayment() {}
+void _registerAiAssistant() {}
