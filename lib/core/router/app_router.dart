@@ -1,26 +1,16 @@
+import 'package:carepass/features/auth/presentation/pages/promo_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../di/service_locator.dart'; // مسار ملف GetIt (اللي فيه sl)
+import '../di/service_locator.dart';
+
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
-
-// ─── Import Pages (uncomment as you build them) ──
-// import '../features/auth/presentation/pages/splash_page.dart';
-// import '../features/auth/presentation/pages/onboarding_page.dart';
-// import '../features/auth/presentation/pages/login_page.dart';
-// import '../features/auth/presentation/pages/verify_otp_page.dart';
-// import '../features/auth/presentation/pages/register_page.dart';
-// import '../features/services/presentation/pages/services_page.dart';
-// import '../features/card/presentation/pages/card_page.dart';
-// import '../features/providers/presentation/pages/providers_page.dart';
-// import '../features/providers/presentation/pages/provider_detail_page.dart';
-// import '../features/account/presentation/pages/account_page.dart';
-// import '../features/payment/presentation/pages/payment_page.dart';
-// import '../features/payment/presentation/pages/payment_success_page.dart';
-// import '../features/ai_assistant/presentation/pages/ai_assistant_page.dart';
-// import 'shell_scaffold.dart';
+import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 // ─────────────────────────────────────────────
 //  Route Names
@@ -28,30 +18,22 @@ import '../../features/home/presentation/bloc/home_bloc.dart';
 class AppRoutes {
   AppRoutes._();
 
-  static const String splash          = '/';
-  static const String onboarding      = '/onboarding';
-  static const String login           = '/login';
-  static const String verifyOtp       = '/verify-otp';
-  static const String register        = '/register';
-  static const String selectArea      = '/select-area';
+  static const String splash = '/';
+  static const String promo = '/promo';
+  static const String login = '/login';
+  static const String verifyOtp = '/verify-otp';
+  static const String register = '/register';
 
-  // Main Shell
-  static const String home            = '/home';
-  static const String services        = '/services';
-  static const String card            = '/card';
-  static const String providers       = '/providers';
-  static const String account         = '/account';
+  static const String home = '/home';
+  static const String services = '/services';
+  static const String card = '/card';
+  static const String providers = '/providers';
+  static const String account = '/account';
 
-  // Sub-routes
-  static const String providerDetail  = '/providers/detail';
-  static const String serviceDetail   = '/services/detail';
-  static const String payment         = '/payment';
-  static const String paymentSuccess  = '/payment/success';
-  static const String paymentHistory  = '/account/payments';
-  static const String editProfile     = '/account/edit';
-  static const String aiAssistant     = '/ai-assistant';
-  static const String notifications   = '/notifications';
-  static const String settings        = '/settings';
+  static const String payment = '/payment';
+  static const String aiAssistant = '/ai-assistant';
+  static const String notifications = '/notifications';
+  static const String settings = '/settings';
 }
 
 // ─────────────────────────────────────────────
@@ -61,82 +43,127 @@ class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+  // AuthBloc instance واحدة بتتشارك بين Splash → Login → OTP → Register
+  static AuthBloc? _authBloc;
+  static AuthBloc get _sharedAuthBloc {
+    if (_authBloc == null || _authBloc!.isClosed) {
+      _authBloc = sl<AuthBloc>();
+    }
+    return _authBloc!;
+  }
+
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    // خلي البداية من الـ home مؤقتاً عشان تتست الشاشة علطول
-    initialLocation: AppRoutes.home, 
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
 
     routes: [
-      // ── Splash ──────────────────────────────────
+      // ── Splash ──────────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) => const _PlaceholderPage(title: 'Splash'),
+        builder: (context, state) => BlocProvider.value(
+          value: _sharedAuthBloc..add(AuthCheckRequested()),
+          child: const SplashPage(),
+        ),
       ),
 
-      // ── Main Shell (Bottom Nav) ───────────────────
+      GoRoute(path: AppRoutes.promo, builder: (_, __) => const PromoPage()),
+
+      // ── Login ────────────────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, state) => BlocProvider.value(
+          value: _sharedAuthBloc,
+          child: const LoginPage(),
+        ),
+      ),
+
+  
+      GoRoute(
+        path: AppRoutes.register,
+        builder: (_, __) => BlocProvider.value(
+          value: _sharedAuthBloc,
+          child: const RegisterPage(), // ← مش محتاج extra params دلوقتي
+        ),
+      ),
+
+      // ── Main Shell (Bottom Nav) ───────────────────────────────────────────
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) {
-          return _ShellScaffold(child: child);
-        },
+        builder: (context, state, child) => _ShellScaffold(child: child),
         routes: [
           GoRoute(
             path: AppRoutes.home,
-            builder: (context, state) {
-              // الحل السحري: حقن الـ Bloc قبل فتح الشاشة
-              return BlocProvider(
-                create: (context) => sl<HomeBloc>(),
-                child: const HomePage(),
-              );
-            },
+            builder: (context, state) => BlocProvider(
+              create: (_) => sl<HomeBloc>(),
+              child: const HomePage(),
+            ),
           ),
+
           GoRoute(
             path: AppRoutes.services,
-            builder: (context, state) => const _PlaceholderPage(title: 'Services'),
+            builder: (_, __) => const _PlaceholderPage(title: 'Services'),
           ),
+
           GoRoute(
             path: AppRoutes.card,
-            builder: (context, state) => const _PlaceholderPage(title: 'My Card'),
+            builder: (_, __) => const _PlaceholderPage(title: 'My Card'),
           ),
+
           GoRoute(
             path: AppRoutes.providers,
-            builder: (context, state) => const _PlaceholderPage(title: 'Providers'),
+            builder: (_, __) => const _PlaceholderPage(title: 'Providers'),
           ),
+
           GoRoute(
             path: AppRoutes.account,
-            builder: (context, state) => const _PlaceholderPage(title: 'Account'),
+            builder: (_, __) => const _PlaceholderPage(title: 'Account'),
           ),
         ],
       ),
 
-      // ... (باقي الراوتس زي ما هي بالظبط في الكود بتاعك) ...
+      // ── Full-screen routes (outside shell) ───────────────────────────────
       GoRoute(
         path: AppRoutes.payment,
-        builder: (context, state) => const _PlaceholderPage(title: 'Payment'),
+        builder: (_, __) => const _PlaceholderPage(title: 'Payment'),
+      ),
+
+      GoRoute(
+        path: AppRoutes.aiAssistant,
+        builder: (_, __) => const _PlaceholderPage(title: 'AI Assistant'),
+      ),
+
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, __) => const _PlaceholderPage(title: 'Notifications'),
+      ),
+
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (_, __) => const _PlaceholderPage(title: 'Settings'),
       ),
     ],
 
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(child: Text('Page not found: ${state.error}')),
-    ),
+    // ── Error Page ────────────────────────────────────────────────────────
+    errorBuilder: (context, state) =>
+        Scaffold(body: Center(child: Text('Page not found: ${state.error}'))),
   );
 }
 
 // ─────────────────────────────────────────────
-//  Shell Scaffold (Bottom Nav)
+//  Shell Scaffold
 // ─────────────────────────────────────────────
 class _ShellScaffold extends StatelessWidget {
   final Widget child;
   const _ShellScaffold({required this.child});
 
   int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith(AppRoutes.services))  return 1;
-    if (location.startsWith(AppRoutes.card))      return 2;
-    if (location.startsWith(AppRoutes.providers)) return 3;
-    if (location.startsWith(AppRoutes.account))   return 4;
-    return 0; // Default to Home
+    final loc = GoRouterState.of(context).uri.toString();
+    if (loc.startsWith(AppRoutes.services)) return 1;
+    if (loc.startsWith(AppRoutes.card)) return 2;
+    if (loc.startsWith(AppRoutes.providers)) return 3;
+    if (loc.startsWith(AppRoutes.account)) return 4;
+    return 0;
   }
 
   @override
@@ -144,27 +171,53 @@ class _ShellScaffold extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // ضفت دي عشان لو الألوان اختفت
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex(context),
         onTap: (i) {
           final routes = [
-            AppRoutes.home, AppRoutes.services, AppRoutes.card,
-            AppRoutes.providers, AppRoutes.account,
+            AppRoutes.home,
+            AppRoutes.services,
+            AppRoutes.card,
+            AppRoutes.providers,
+            AppRoutes.account,
           ];
           context.go(routes[i]);
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined),   activeIcon: Icon(Icons.home),         label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_outlined), activeIcon: Icon(Icons.grid_view), label: 'Services'),
-          BottomNavigationBarItem(icon: Icon(Icons.credit_card_outlined), activeIcon: Icon(Icons.credit_card), label: 'Card'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), activeIcon: Icon(Icons.location_on), label: 'Providers'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline),  activeIcon: Icon(Icons.person),       label: 'Account'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.grid_view_outlined),
+            activeIcon: Icon(Icons.grid_view),
+            label: 'Services',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.credit_card_outlined),
+            activeIcon: Icon(Icons.credit_card),
+            label: 'Card',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_on_outlined),
+            activeIcon: Icon(Icons.location_on),
+            label: 'Providers',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Account',
+          ),
         ],
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────
+//  Placeholder
+// ─────────────────────────────────────────────
 class _PlaceholderPage extends StatelessWidget {
   final String title;
   const _PlaceholderPage({required this.title});

@@ -24,7 +24,11 @@ class UserSummary extends Equatable {
 
   bool get isSubscribed => subscriptionStatus == SubscriptionStatus.active;
 
-  String get firstName => fullName.split(' ').first;
+  String get firstName {
+  if (fullName.trim().isEmpty) return 'there';
+  return fullName.trim().split(' ').first;
+
+}
 
   @override
   List<Object?> get props => [

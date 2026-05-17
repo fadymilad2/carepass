@@ -16,17 +16,20 @@ class UserSummaryModel extends UserSummary {
 
   factory UserSummaryModel.fromFirestore(Map<String, dynamic> data, String id) {
     return UserSummaryModel(
-      id: id,
-      fullName: data['fullName'] ?? '',
-      photoUrl: data['photoUrl'],
-      memberId: data['memberId'],
-      subscriptionStatus: _parseStatus(data['subscriptionStatus']),
-      cardExpiryDate: data['cardExpiryDate'] != null
-          ? DateTime.parse(data['cardExpiryDate'])
-          : null,
-      selectedArea: data['selectedArea'], firstName: data['firstName'] ?? '',
-    );
-  }
+    id: id,
+
+    // ✅ اقرأ username أولاً، لو مش موجود جرب fullName
+    fullName: data['username'] ?? data['fullName'] ?? '',
+
+    photoUrl: data['photoUrl'],
+    memberId: data['memberId'],
+    subscriptionStatus: _parseStatus(data['subscriptionStatus']),
+    cardExpiryDate: data['cardExpiryDate'] != null
+        ? DateTime.parse(data['cardExpiryDate'])
+        : null,
+    selectedArea: data['selectedArea'] ?? '', firstName: '',
+  );
+}
 
   static SubscriptionStatus _parseStatus(String? status) {
     switch (status) {

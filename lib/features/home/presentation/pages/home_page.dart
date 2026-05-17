@@ -6,7 +6,6 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/home_widgets.dart';
-import '../../domain/entities/home_entities.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -160,23 +159,7 @@ class _HomeContent extends StatelessWidget {
                 ],
               ),
             ),
-
-          // ── Get Started Button (not subscribed) ───
-          if (!isSubscribed)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimens.paddingMD),
-                child: ElevatedButton(
-                  onPressed: () => context.push(AppRoutes.payment),
-                  child: const Text('Get Started'),
-                ),
-              ),
-            ),
-
-          // Bottom spacing for FAB
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80),
-          ),
+         
         ],
       ),
     );

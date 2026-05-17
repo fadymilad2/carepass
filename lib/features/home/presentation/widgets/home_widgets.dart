@@ -42,7 +42,9 @@ class HomeHeader extends StatelessWidget {
                 : null,
             child: user.photoUrl == null
                 ? Text(
-                    user.firstName[0].toUpperCase(),
+                    user.firstName.isNotEmpty
+                        ? user.firstName[0].toUpperCase()
+                        : '?',
                     style: AppTextStyles.titleLarge.copyWith(
                       color: AppColors.primary,
                     ),
@@ -187,7 +189,8 @@ class _BannerCard extends StatelessWidget {
                     imageUrl: banner.imageUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, _) => const _BannerPlaceholderGradient(),
-                    errorWidget: (_, _, _) => const _BannerPlaceholderGradient(),
+                    errorWidget: (_, _, _) =>
+                        const _BannerPlaceholderGradient(),
                   ),
 
             // Dark overlay
@@ -216,11 +219,14 @@ class _BannerCard extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accent,
-                        borderRadius:
-                            BorderRadius.circular(AppDimens.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppDimens.radiusFull,
+                        ),
                       ),
                       child: Text(
                         'Up to ${banner.discountPercent}% off',
@@ -254,11 +260,14 @@ class _BannerCard extends StatelessWidget {
                       onTap: onSubscribeTap,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius:
-                              BorderRadius.circular(AppDimens.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimens.radiusFull,
+                          ),
                         ),
                         child: Text(
                           'Subscribe Now',
@@ -324,10 +333,26 @@ class HomeFeatureTiles extends StatelessWidget {
   const HomeFeatureTiles({super.key});
 
   static const _features = [
-    (Icons.local_offer_outlined,    'Discounted Services',   'Save up to 50% on medical services'),
-    (Icons.verified_outlined,       'Trusted Providers',     'Wide network of clinics and hospitals'),
-    (Icons.credit_card_outlined,    'Easy Subscription',     'Simple plans, cancel anytime'),
-    (Icons.favorite_border_rounded, 'Your Health, Our Priority', 'Healthcare made affordable'),
+    (
+      Icons.local_offer_outlined,
+      'Discounted Services',
+      'Save up to 50% on medical services',
+    ),
+    (
+      Icons.verified_outlined,
+      'Trusted Providers',
+      'Wide network of clinics and hospitals',
+    ),
+    (
+      Icons.credit_card_outlined,
+      'Easy Subscription',
+      'Simple plans, cancel anytime',
+    ),
+    (
+      Icons.favorite_border_rounded,
+      'Your Health, Our Priority',
+      'Healthcare made affordable',
+    ),
   ];
 
   @override
@@ -448,7 +473,11 @@ class _StatCard extends StatelessWidget {
               value,
               style: AppTextStyles.headlineMedium.copyWith(color: color),
             ),
-            Text(label, style: AppTextStyles.labelSmall, textAlign: TextAlign.center),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -546,5 +575,4 @@ class _AiAssistantFabState extends State<AiAssistantFab> {
       ),
     );
   }
-
 }

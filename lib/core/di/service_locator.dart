@@ -1,3 +1,8 @@
+import 'package:carepass/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:carepass/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:carepass/features/auth/domain/repositories/auth_repository.dart';
+import 'package:carepass/features/auth/domain/usecases/auth_usecases.dart';
+import 'package:carepass/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carepass/features/home/data/datasources/home_remote_datasource.dart';
 import 'package:carepass/features/home/data/repositories/home_repository_impl.dart';
 import 'package:carepass/features/home/domain/repositories/home_repository.dart';
@@ -69,7 +74,33 @@ void _registerHome() {
 // ───────────────────────────────────────────────────────────────────────
 // باقي الفيتشرز سيبها كومنت زي ما هي لحد ما نبنيها
 // ───────────────────────────────────────────────────────────────────────
-void _registerAuth() {}
+void _registerAuth() {
+  sl.registerFactory(() => AuthBloc(
+    signIn:             sl(),
+    register:           sl(),
+    getCurrentUser:     sl(),
+    signOut:            sl(),
+    sendPasswordReset:  sl(),
+  ));
+
+  sl.registerLazySingleton(() => SignIn(sl()));
+  sl.registerLazySingleton(() => Register(sl()));
+  sl.registerLazySingleton(() => GetCurrentUser(sl()));
+  sl.registerLazySingleton(() => SignOut(sl()));
+  sl.registerLazySingleton(() => SendPasswordReset(sl()));
+
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(
+      auth:      FirebaseAuth.instance,
+      firestore: FirebaseFirestore.instance,
+    ),
+  );
+}
+
 void _registerServices() {}
 void _registerCard() {}
 void _registerProviders() {}
