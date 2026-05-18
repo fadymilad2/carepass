@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -27,6 +28,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CarePass needs your location to show nearby services</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>CarePass needs your location to show nearby services</string>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>

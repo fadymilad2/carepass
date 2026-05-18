@@ -1,4 +1,6 @@
 import 'package:carepass/features/auth/presentation/pages/promo_page.dart';
+import 'package:carepass/features/services/presentation/bloc/services_bloc.dart';
+import 'package:carepass/features/services/presentation/pages/services_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -67,7 +69,7 @@ class AppRouter {
         ),
       ),
 
-      GoRoute(path: AppRoutes.promo, builder: (_, __) => const PromoPage()),
+      GoRoute(path: AppRoutes.promo, builder: (_, _) => const PromoPage()),
 
       // ── Login ────────────────────────────────────────────────────────────
       GoRoute(
@@ -78,10 +80,9 @@ class AppRouter {
         ),
       ),
 
-  
       GoRoute(
         path: AppRoutes.register,
-        builder: (_, __) => BlocProvider.value(
+        builder: (_, _) => BlocProvider.value(
           value: _sharedAuthBloc,
           child: const RegisterPage(), // ← مش محتاج extra params دلوقتي
         ),
@@ -102,22 +103,25 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.services,
-            builder: (_, __) => const _PlaceholderPage(title: 'Services'),
+            builder: (_, _) => BlocProvider(
+              create: (_) => sl<ServicesBloc>(),
+              child: const ServicesPage(),
+            ),
           ),
 
           GoRoute(
             path: AppRoutes.card,
-            builder: (_, __) => const _PlaceholderPage(title: 'My Card'),
+            builder: (_, _) => const _PlaceholderPage(title: 'My Card'),
           ),
 
           GoRoute(
             path: AppRoutes.providers,
-            builder: (_, __) => const _PlaceholderPage(title: 'Providers'),
+            builder: (_, _) => const _PlaceholderPage(title: 'Providers'),
           ),
 
           GoRoute(
             path: AppRoutes.account,
-            builder: (_, __) => const _PlaceholderPage(title: 'Account'),
+            builder: (_, _) => const _PlaceholderPage(title: 'Account'),
           ),
         ],
       ),
@@ -125,22 +129,22 @@ class AppRouter {
       // ── Full-screen routes (outside shell) ───────────────────────────────
       GoRoute(
         path: AppRoutes.payment,
-        builder: (_, __) => const _PlaceholderPage(title: 'Payment'),
+        builder: (_, _) => const _PlaceholderPage(title: 'Payment'),
       ),
 
       GoRoute(
         path: AppRoutes.aiAssistant,
-        builder: (_, __) => const _PlaceholderPage(title: 'AI Assistant'),
+        builder: (_, _) => const _PlaceholderPage(title: 'AI Assistant'),
       ),
 
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (_, __) => const _PlaceholderPage(title: 'Notifications'),
+        builder: (_, _) => const _PlaceholderPage(title: 'Notifications'),
       ),
 
       GoRoute(
         path: AppRoutes.settings,
-        builder: (_, __) => const _PlaceholderPage(title: 'Settings'),
+        builder: (_, _) => const _PlaceholderPage(title: 'Settings'),
       ),
     ],
 

@@ -8,6 +8,11 @@ import 'package:carepass/features/home/data/repositories/home_repository_impl.da
 import 'package:carepass/features/home/domain/repositories/home_repository.dart';
 import 'package:carepass/features/home/domain/usecases/home_usecases.dart';
 import 'package:carepass/features/home/presentation/bloc/home_bloc.dart';
+import 'package:carepass/features/services/data/datasources/services_remote_datasource.dart';
+import 'package:carepass/features/services/data/repositories/services_repository_impl.dart';
+import 'package:carepass/features/services/domain/repositories/services_repository.dart';
+import 'package:carepass/features/services/domain/usecases/services_usecases.dart';
+import 'package:carepass/features/services/presentation/bloc/services_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
@@ -101,7 +106,25 @@ void _registerAuth() {
   );
 }
 
-void _registerServices() {}
+void _registerServices() {
+  sl.registerFactory(() => ServicesBloc(
+    getServices:    sl(),
+    searchServices: sl(),
+  ));
+
+  sl.registerLazySingleton(() => GetServices(sl()));
+  sl.registerLazySingleton(() => SearchServices(sl()));
+
+  sl.registerLazySingleton<ServicesRepository>(
+    () => ServicesRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<ServicesRemoteDataSource>(
+    () => ServicesRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+    ),
+  );
+}
 void _registerCard() {}
 void _registerProviders() {}
 void _registerAccount() {}

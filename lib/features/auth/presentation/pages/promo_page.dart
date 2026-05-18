@@ -168,7 +168,7 @@ class _PromoPageState extends State<PromoPage> {
 // ─────────────────────────────────────────────
 class _PromoSlide extends StatelessWidget {
   final _PromoData data;
-  const _PromoSlide({super.key, required this.data});
+  const _PromoSlide({required this.data});
 
   @override
   Widget build(BuildContext context) {

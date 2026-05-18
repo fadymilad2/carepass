@@ -37,10 +37,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  geocoding: ^4.0.0
+  geolocator: ^14.0.2
   get_it: ^9.2.1
   go_router: ^17.2.3
   google_fonts: ^8.1.0
   hash_cached_image: ^0.0.2
+  permission_handler: ^12.0.1
   shimmer: ^3.0.0
 
 dev_dependencies:
