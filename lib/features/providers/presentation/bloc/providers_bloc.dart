@@ -126,10 +126,6 @@ class ProvidersBloc extends Bloc<ProvidersEvent, ProvidersState> {
     on<ProviderFavoriteToggled>(_onFavoriteToggled);
   }
 
-  ProvidersFilter get _currentFilter =>
-      state is ProvidersLoaded
-          ? (state as ProvidersLoaded).filter
-          : const ProvidersFilter();
 
   Future<void> _onLoad(
     ProvidersLoadRequested e,

@@ -1,3 +1,8 @@
+import 'package:carepass/features/account/data/datasources/account_remote_datasource.dart';
+import 'package:carepass/features/account/data/repositories/account_repository_impl.dart';
+import 'package:carepass/features/account/domain/repositories/account_repository.dart';
+import 'package:carepass/features/account/domain/usecases/account_usecases.dart';
+import 'package:carepass/features/account/presentation/bloc/account_bloc.dart';
 import 'package:carepass/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:carepass/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:carepass/features/auth/domain/repositories/auth_repository.dart';
@@ -175,6 +180,24 @@ void _registerProviders() {
     ),
   );
 }
-void _registerAccount() {}
+void _registerAccount() {
+  sl.registerFactory(() => AccountBloc(
+    getUser:        sl(),
+    updateUsername: sl(),
+    signOut:        sl(),
+  ));
+  sl.registerLazySingleton(() => GetAccountUser(sl()));
+  sl.registerLazySingleton(() => UpdateUsername(sl()));
+  sl.registerLazySingleton(() => AccountSignOut(sl()));
+  sl.registerLazySingleton<AccountRepository>(
+    () => AccountRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<AccountRemoteDataSource>(
+    () => AccountRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+      auth:      FirebaseAuth.instance,
+    ),
+  );
+}
 void _registerPayment() {}
 void _registerAiAssistant() {}

@@ -1,3 +1,5 @@
+import 'package:carepass/features/account/presentation/bloc/account_bloc.dart';
+import 'package:carepass/features/account/presentation/pages/account_page.dart';
 import 'package:carepass/features/auth/presentation/pages/promo_page.dart';
 import 'package:carepass/features/card/presentation/bloc/card_bloc.dart';
 import 'package:carepass/features/card/presentation/pages/card_page.dart';
@@ -133,7 +135,13 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.account,
-            builder: (_, _) => const _PlaceholderPage(title: 'Account'),
+            builder: (context, __) => MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => sl<AccountBloc>()),
+                BlocProvider.value(value: _sharedAuthBloc),
+              ],
+              child: const AccountPage(),
+            ),
           ),
         ],
       ),
