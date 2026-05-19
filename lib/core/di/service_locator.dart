@@ -3,6 +3,11 @@ import 'package:carepass/features/auth/data/repositories/auth_repository_impl.da
 import 'package:carepass/features/auth/domain/repositories/auth_repository.dart';
 import 'package:carepass/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:carepass/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:carepass/features/card/data/datasources/card_remote_datasource.dart';
+import 'package:carepass/features/card/data/repositories/card_repository_impl.dart';
+import 'package:carepass/features/card/domain/repositories/card_repository.dart';
+import 'package:carepass/features/card/domain/usecases/card_usecases.dart';
+import 'package:carepass/features/card/presentation/bloc/card_bloc.dart';
 import 'package:carepass/features/home/data/datasources/home_remote_datasource.dart';
 import 'package:carepass/features/home/data/repositories/home_repository_impl.dart';
 import 'package:carepass/features/home/domain/repositories/home_repository.dart';
@@ -130,7 +135,23 @@ void _registerServices() {
     ),
   );
 }
-void _registerCard() {}
+void _registerCard() {
+  sl.registerFactory(() => CardBloc(
+    getCard:   sl(),
+    renewCard: sl(),
+  ));
+  sl.registerLazySingleton(() => GetUserCard(sl()));
+  sl.registerLazySingleton(() => RenewCard(sl()));
+  sl.registerLazySingleton<CardRepository>(
+    () => CardRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<CardRemoteDataSource>(
+    () => CardRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+      auth:      FirebaseAuth.instance,
+    ),
+  );
+}
 void _registerProviders() {
   sl.registerFactory(() => ProvidersBloc(
     getProviders:    sl(),

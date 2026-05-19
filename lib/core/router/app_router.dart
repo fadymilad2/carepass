@@ -1,4 +1,6 @@
 import 'package:carepass/features/auth/presentation/pages/promo_page.dart';
+import 'package:carepass/features/card/presentation/bloc/card_bloc.dart';
+import 'package:carepass/features/card/presentation/pages/card_page.dart';
 import 'package:carepass/features/providers/domain/entities/provider_entities.dart';
 import 'package:carepass/features/providers/presentation/bloc/providers_bloc.dart';
 import 'package:carepass/features/providers/presentation/pages/provider_detail_page.dart';
@@ -115,16 +117,19 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.card,
-            builder: (_, _) => const _PlaceholderPage(title: 'My Card'),
+            builder: (_, __) => BlocProvider(
+              create: (_) => sl<CardBloc>(),
+              child: const CardPage(),
+            ),
           ),
 
           GoRoute(
-  path: AppRoutes.providers,
-  builder: (_, __) => BlocProvider(
-    create: (_) => sl<ProvidersBloc>(),
-    child: const ProvidersPage(),
-  ),
-),
+            path: AppRoutes.providers,
+            builder: (_, __) => BlocProvider(
+              create: (_) => sl<ProvidersBloc>(),
+              child: const ProvidersPage(),
+            ),
+          ),
 
           GoRoute(
             path: AppRoutes.account,
@@ -149,12 +154,12 @@ class AppRouter {
         builder: (_, _) => const _PlaceholderPage(title: 'Notifications'),
       ),
       GoRoute(
-  path: '/providers/detail',
-  builder: (context, state) {
-    final provider = state.extra as MedicalProvider;
-    return ProviderDetailPage(provider: provider);
-  },
-),
+        path: '/providers/detail',
+        builder: (context, state) {
+          final provider = state.extra as MedicalProvider;
+          return ProviderDetailPage(provider: provider);
+        },
+      ),
       GoRoute(
         path: AppRoutes.settings,
         builder: (_, _) => const _PlaceholderPage(title: 'Settings'),
