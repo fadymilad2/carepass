@@ -8,6 +8,11 @@ import 'package:carepass/features/home/data/repositories/home_repository_impl.da
 import 'package:carepass/features/home/domain/repositories/home_repository.dart';
 import 'package:carepass/features/home/domain/usecases/home_usecases.dart';
 import 'package:carepass/features/home/presentation/bloc/home_bloc.dart';
+import 'package:carepass/features/providers/data/datasources/providers_remote_datasource.dart';
+import 'package:carepass/features/providers/data/repositories/providers_repository_impl.dart';
+import 'package:carepass/features/providers/domain/repositories/providers_repository.dart';
+import 'package:carepass/features/providers/domain/usecases/providers_usecases.dart';
+import 'package:carepass/features/providers/presentation/bloc/providers_bloc.dart';
 import 'package:carepass/features/services/data/datasources/services_remote_datasource.dart';
 import 'package:carepass/features/services/data/repositories/services_repository_impl.dart';
 import 'package:carepass/features/services/domain/repositories/services_repository.dart';
@@ -126,7 +131,29 @@ void _registerServices() {
   );
 }
 void _registerCard() {}
-void _registerProviders() {}
+void _registerProviders() {
+  sl.registerFactory(() => ProvidersBloc(
+    getProviders:    sl(),
+    getProviderById: sl(),
+    searchProviders: sl(),
+    toggleFavorite:  sl(),
+  ));
+
+  sl.registerLazySingleton(() => GetProviders(sl()));
+  sl.registerLazySingleton(() => GetProviderById(sl()));
+  sl.registerLazySingleton(() => SearchProviders(sl()));
+  sl.registerLazySingleton(() => ToggleFavorite(sl()));
+
+  sl.registerLazySingleton<ProvidersRepository>(
+    () => ProvidersRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<ProvidersRemoteDataSource>(
+    () => ProvidersRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+    ),
+  );
+}
 void _registerAccount() {}
 void _registerPayment() {}
 void _registerAiAssistant() {}
