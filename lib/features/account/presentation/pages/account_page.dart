@@ -32,11 +32,13 @@ class _AccountPageState extends State<AccountPage> {
             context.go(AppRoutes.promo);
           }
           if (state is AccountError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
           }
         },
         builder: (context, state) {
@@ -68,7 +70,6 @@ class _AccountContent extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-
             // ── Header ────────────────────────────
             _AccountHeader(user: user),
 
@@ -117,8 +118,10 @@ class _AccountContent extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.language_outlined,
                   label: 'Language',
-                  trailing: const Text('English',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  trailing: const Text(
+                    'English',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                   onTap: () {},
                 ),
               ],
@@ -163,9 +166,12 @@ class _AccountContent extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            Text('CarePass v1.0.0',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textHint)),
+            Text(
+              'CarePass v1.0.0',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textHint,
+              ),
+            ),
 
             const SizedBox(height: 80),
           ],
@@ -184,20 +190,19 @@ class _AccountContent extends StatelessWidget {
         value: context.read<AccountBloc>(),
         child: Padding(
           padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom),
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Edit Profile',
-                    style: AppTextStyles.headlineSmall),
+                Text('Edit Profile', style: AppTextStyles.headlineSmall),
                 const SizedBox(height: 16),
                 Text('Username', style: AppTextStyles.labelLarge),
                 const SizedBox(height: 8),
@@ -212,9 +217,8 @@ class _AccountContent extends StatelessWidget {
                   onPressed: () {
                     if (ctrl.text.trim().isNotEmpty) {
                       context.read<AccountBloc>().add(
-                            AccountUsernameUpdateRequested(
-                                ctrl.text.trim()),
-                          );
+                        AccountUsernameUpdateRequested(ctrl.text.trim()),
+                      );
                       Navigator.pop(context);
                     }
                   },
@@ -231,23 +235,24 @@ class _AccountContent extends StatelessWidget {
   void _confirmSignOut(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              context
-                  .read<AccountBloc>()
-                  .add(AccountSignOutRequested());
+              Navigator.pop(dialogContext);
+
+              context.read<AccountBloc>().add(AccountSignOutRequested());
             },
-            child: Text('Sign Out',
-                style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -274,9 +279,7 @@ class _AccountHeader extends StatelessWidget {
             radius: 32,
             backgroundColor: AppColors.primarySurface,
             child: Text(
-              user.username.isNotEmpty
-                  ? user.username[0].toUpperCase()
-                  : '?',
+              user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
               style: AppTextStyles.headlineLarge.copyWith(
                 color: AppColors.primary,
               ),
@@ -287,12 +290,13 @@ class _AccountHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.username,
-                    style: AppTextStyles.headlineSmall),
+                Text(user.username, style: AppTextStyles.headlineSmall),
                 const SizedBox(height: 2),
-                Text(user.email,
-                    style: AppTextStyles.bodySmall,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  user.email,
+                  style: AppTextStyles.bodySmall,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 if (user.memberSince != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -305,8 +309,8 @@ class _AccountHeader extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () => _AccountContent(user: user)
-                ._showEditProfile(context, user),
+            onPressed: () =>
+                _AccountContent(user: user)._showEditProfile(context, user),
           ),
         ],
       ),
@@ -344,20 +348,25 @@ class _SubscriptionBanner extends StatelessWidget {
               children: [
                 Text(
                   '${user.planName ?? 'Standard'} Plan',
-                  style: AppTextStyles.titleMedium
-                      .copyWith(color: Colors.white),
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: Colors.white,
+                  ),
                 ),
-                Text('Active subscription',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: Colors.white70)),
+                Text(
+                  'Active subscription',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
               ],
             ),
           ),
           TextButton(
             onPressed: () => context.go(AppRoutes.card),
-            child: Text('View Card',
-                style: AppTextStyles.labelLarge
-                    .copyWith(color: Colors.white)),
+            child: Text(
+              'View Card',
+              style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -381,17 +390,21 @@ class _SubscribePrompt extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.card_membership_outlined,
-              color: AppColors.primary, size: 28),
+          const Icon(
+            Icons.card_membership_outlined,
+            color: AppColors.primary,
+            size: 28,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('No Active Plan',
-                    style: AppTextStyles.titleMedium),
-                Text('Subscribe to get discounts',
-                    style: AppTextStyles.bodySmall),
+                Text('No Active Plan', style: AppTextStyles.titleMedium),
+                Text(
+                  'Subscribe to get discounts',
+                  style: AppTextStyles.bodySmall,
+                ),
               ],
             ),
           ),
@@ -428,17 +441,19 @@ class _MenuSection extends StatelessWidget {
           if (title != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: Text(title!,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textSecondary)),
+              child: Text(
+                title!,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ),
           ...items.asMap().entries.map((e) {
             final isLast = e.key == items.length - 1;
             return Column(
               children: [
                 e.value,
-                if (!isLast)
-                  const Divider(height: 1, indent: 56),
+                if (!isLast) const Divider(height: 1, indent: 56),
               ],
             );
           }),
@@ -468,11 +483,10 @@ class _MenuItem extends StatelessWidget {
     final c = color ?? AppColors.textPrimary;
     return ListTile(
       leading: Icon(icon, color: c, size: 22),
-      title: Text(label,
-          style: AppTextStyles.bodyMedium.copyWith(color: c)),
-      trailing: trailing ??
-          Icon(Icons.arrow_forward_ios,
-              size: 14, color: AppColors.textHint),
+      title: Text(label, style: AppTextStyles.bodyMedium.copyWith(color: c)),
+      trailing:
+          trailing ??
+          Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textHint),
       onTap: onTap,
     );
   }

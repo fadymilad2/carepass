@@ -1,1 +1,46 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"carepass-b0220","appId":"1:375138173967:android:50d6e29e7d336884524f7a","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"carepass-b0220","configurations":{"android":"1:375138173967:android:50d6e29e7d336884524f7a","ios":"1:375138173967:ios:ea1c8ccceea85093524f7a","macos":"1:375138173967:ios:ea1c8ccceea85093524f7a","web":"1:375138173967:web:18ab85e4913ac974524f7a","windows":"1:375138173967:web:c7952cb49685e724524f7a"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "carepass-b0220",
+          "appId": "1:375138173967:android:50d6e29e7d336884524f7a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "carepass-b0220",
+          "configurations": {
+            "android": "1:375138173967:android:50d6e29e7d336884524f7a",
+            "ios": "1:375138173967:ios:ea1c8ccceea85093524f7a",
+            "macos": "1:375138173967:ios:ea1c8ccceea85093524f7a",
+            "web": "1:375138173967:web:18ab85e4913ac974524f7a",
+            "windows": "1:375138173967:web:c7952cb49685e724524f7a"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "runtime": "nodejs22",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

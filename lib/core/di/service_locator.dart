@@ -3,6 +3,11 @@ import 'package:carepass/features/account/data/repositories/account_repository_i
 import 'package:carepass/features/account/domain/repositories/account_repository.dart';
 import 'package:carepass/features/account/domain/usecases/account_usecases.dart';
 import 'package:carepass/features/account/presentation/bloc/account_bloc.dart';
+import 'package:carepass/features/ai_assistant/data/datasources/ai_remote_datasource.dart';
+import 'package:carepass/features/ai_assistant/data/repositories/ai_repository_impl.dart';
+import 'package:carepass/features/ai_assistant/domain/repositories/ai_repository.dart';
+import 'package:carepass/features/ai_assistant/domain/usecases/ai_usecases.dart';
+import 'package:carepass/features/ai_assistant/presentation/bloc/ai_bloc.dart';
 import 'package:carepass/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:carepass/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:carepass/features/auth/domain/repositories/auth_repository.dart';
@@ -29,6 +34,7 @@ import 'package:carepass/features/services/domain/repositories/services_reposito
 import 'package:carepass/features/services/domain/usecases/services_usecases.dart';
 import 'package:carepass/features/services/presentation/bloc/services_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 // استدعي ملفات الـ Home اللي عملناها
@@ -200,4 +206,15 @@ void _registerAccount() {
   );
 }
 void _registerPayment() {}
-void _registerAiAssistant() {}
+void _registerAiAssistant() {
+  sl.registerFactory(() => AiBloc(analyze: sl()));
+  sl.registerLazySingleton(() => AnalyzeSymptoms(sl()));
+  sl.registerLazySingleton<AiAssistantRepository>(
+    () => AiAssistantRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<AiRemoteDataSource>(
+    () => AiRemoteDataSourceImpl(
+      functions: FirebaseFunctions.instance,
+    ),
+  );
+}

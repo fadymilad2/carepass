@@ -223,7 +223,7 @@ class _BannerCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.accent,
+                        color: AppColors.navy,
                         borderRadius: BorderRadius.circular(
                           AppDimens.radiusFull,
                         ),

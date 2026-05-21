@@ -1,5 +1,7 @@
 import 'package:carepass/features/account/presentation/bloc/account_bloc.dart';
 import 'package:carepass/features/account/presentation/pages/account_page.dart';
+import 'package:carepass/features/ai_assistant/presentation/bloc/ai_bloc.dart';
+import 'package:carepass/features/ai_assistant/presentation/pages/ai_assistant_page.dart';
 import 'package:carepass/features/auth/presentation/pages/promo_page.dart';
 import 'package:carepass/features/card/presentation/bloc/card_bloc.dart';
 import 'package:carepass/features/card/presentation/pages/card_page.dart';
@@ -119,7 +121,7 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.card,
-            builder: (_, __) => BlocProvider(
+            builder: (_, _) => BlocProvider(
               create: (_) => sl<CardBloc>(),
               child: const CardPage(),
             ),
@@ -127,7 +129,7 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.providers,
-            builder: (_, __) => BlocProvider(
+            builder: (_, _) => BlocProvider(
               create: (_) => sl<ProvidersBloc>(),
               child: const ProvidersPage(),
             ),
@@ -135,7 +137,7 @@ class AppRouter {
 
           GoRoute(
             path: AppRoutes.account,
-            builder: (context, __) => MultiBlocProvider(
+            builder: (context, _) => MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => sl<AccountBloc>()),
                 BlocProvider.value(value: _sharedAuthBloc),
@@ -154,7 +156,10 @@ class AppRouter {
 
       GoRoute(
         path: AppRoutes.aiAssistant,
-        builder: (_, _) => const _PlaceholderPage(title: 'AI Assistant'),
+        builder: (_, _) => BlocProvider(
+          create: (_) => sl<AiBloc>(),
+          child: const AiAssistantPage(),
+        ),
       ),
 
       GoRoute(

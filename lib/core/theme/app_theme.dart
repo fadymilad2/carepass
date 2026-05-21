@@ -7,27 +7,26 @@ import 'package:google_fonts/google_fonts.dart';
 class AppColors {
   AppColors._();
 
-  // Primary brand color (Teal)
-  static const Color primary        = Color(0xFF0D7B6E);
-  static const Color primaryLight   = Color(0xFF1A9E8E);
-  static const Color primaryDark    = Color(0xFF095C52);
-  static const Color primarySurface = Color(0xFFE6F4F2);
+  // Primary brand colors from the image
+  static const Color primary        = Color(0xFF00B4A6); // Teal
+  static const Color primaryDark    = Color(0xFF009185); // Slightly darker teal for pressed states
+  static const Color primarySurface = Color(0xFFE6F7F4); // Light Mint/Teal background
+  
+  // The Dark Navy color from the logo ("Care" part)
+  static const Color navy           = Color(0xFF0D1B3D); 
 
-  // Accent
-  static const Color accent         = Color(0xFF00C9B1);
-
-  // Neutrals
-  static const Color background     = Color(0xFFF5F7FA);
+  // Neutrals from the image
+  static const Color background     = Color(0xFFF2F4F7); // Light grey background
   static const Color surface        = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF0F2F5);
+  static const Color surfaceVariant = Color(0xFFE6F7F4); // Using the brand light surface
   static const Color border         = Color(0xFFE2E8F0);
 
-  // Text
-  static const Color textPrimary    = Color(0xFF1A202C);
-  static const Color textSecondary  = Color(0xFF718096);
+  // Text colors from the image
+  static const Color textPrimary    = Color(0xFF0D1B3D); // Navy for primary text
+  static const Color textSecondary  = Color(0xFF64748B); // Dark grey for secondary text
   static const Color textHint       = Color(0xFFA0AEC0);
 
-  // Status
+  // Status (Kept standard but adjusted to fit the palette slightly)
   static const Color success        = Color(0xFF38A169);
   static const Color successSurface = Color(0xFFE6F4ED);
   static const Color warning        = Color(0xFFD69E2E);
@@ -37,65 +36,65 @@ class AppColors {
   static const Color info           = Color(0xFF3182CE);
   static const Color infoSurface    = Color(0xFFEBF5FF);
 
-  // Card gradient
+  // Card gradient (Based on the CarePass card in the image)
   static const List<Color> cardGradient = [
-    Color(0xFF0D7B6E),
-    Color(0xFF095C52),
+    Color(0xFF00B4A6),
+    Color(0xFF009A8D),
   ];
 }
 
 // ─────────────────────────────────────────────
-//  App Text Styles
+//  App Text Styles (Using Poppins)
 // ─────────────────────────────────────────────
 class AppTextStyles {
   AppTextStyles._();
 
-  static TextStyle get displayLarge => GoogleFonts.cairo(
+  static TextStyle get displayLarge => GoogleFonts.poppins(
     fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
   );
 
-  static TextStyle get displayMedium => GoogleFonts.cairo(
+  static TextStyle get displayMedium => GoogleFonts.poppins(
     fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
   );
 
-  static TextStyle get headlineLarge => GoogleFonts.cairo(
+  static TextStyle get headlineLarge => GoogleFonts.poppins(
     fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
   );
 
-  static TextStyle get headlineMedium => GoogleFonts.cairo(
-    fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
+  static TextStyle get headlineMedium => GoogleFonts.poppins(
+    fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary, // Semibold
   );
 
-  static TextStyle get headlineSmall => GoogleFonts.cairo(
-    fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+  static TextStyle get headlineSmall => GoogleFonts.poppins(
+    fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary, // Semibold
   );
 
-  static TextStyle get titleLarge => GoogleFonts.cairo(
-    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+  static TextStyle get titleLarge => GoogleFonts.poppins(
+    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary, // Semibold
   );
 
-  static TextStyle get titleMedium => GoogleFonts.cairo(
-    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+  static TextStyle get titleMedium => GoogleFonts.poppins(
+    fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary, // Medium
   );
 
-  static TextStyle get bodyLarge => GoogleFonts.cairo(
-    fontSize: 16, fontWeight: FontWeight.w400, color: AppColors.textPrimary,
+  static TextStyle get bodyLarge => GoogleFonts.poppins(
+    fontSize: 16, fontWeight: FontWeight.w400, color: AppColors.textPrimary, // Regular
   );
 
-  static TextStyle get bodyMedium => GoogleFonts.cairo(
-    fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textPrimary,
+  static TextStyle get bodyMedium => GoogleFonts.poppins(
+    fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textPrimary, // Regular
   );
 
-  static TextStyle get bodySmall => GoogleFonts.cairo(
-    fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.textSecondary,
+  static TextStyle get bodySmall => GoogleFonts.poppins(
+    fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.textSecondary, // Regular
   );
 
-  static TextStyle get labelLarge => GoogleFonts.cairo(
-    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+  static TextStyle get labelLarge => GoogleFonts.poppins(
+    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary, // Semibold
   );
 
-  static TextStyle get labelSmall => GoogleFonts.cairo(
-    fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary,
+  static TextStyle get labelSmall => GoogleFonts.poppins(
+    fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary, // Medium
   );
 }
 
@@ -111,13 +110,13 @@ class AppTheme {
       seedColor: AppColors.primary,
       primary: AppColors.primary,
       onPrimary: Colors.white,
-      secondary: AppColors.accent,
+      secondary: AppColors.navy,
       surface: AppColors.surface,
       background: AppColors.background,
       error: AppColors.error,
     ),
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: GoogleFonts.cairo().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
 
     // AppBar
     appBarTheme: AppBarTheme(
@@ -146,7 +145,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: AppTextStyles.titleMedium,
+        textStyle: AppTextStyles.titleMedium.copyWith(color: Colors.white),
         elevation: 0,
       ),
     ),
@@ -155,7 +154,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
+        side: const BorderSide(color: AppColors.primary, width: 1.5),
         minimumSize: const Size(double.infinity, 54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: AppTextStyles.titleMedium,
@@ -165,10 +164,10 @@ class AppTheme {
     // Input
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceVariant,
+      fillColor: AppColors.surface, // Clean white inputs look better on the light grey bg
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
