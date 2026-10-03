@@ -12,6 +12,5 @@ class GetUserCard {
 class RenewCard {
   final CardRepository repo;
   RenewCard(this.repo);
-  Future<Either<Failure, void>> call(String planId) =>
-      repo.renewCard(planId);
+  Future<Either<Failure, void>> call(String planId) => repo.renewCard(planId);
 }

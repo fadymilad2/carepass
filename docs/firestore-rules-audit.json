@@ -1,0 +1,12 @@
+{
+  "score": 4,
+  "summary": "Owner isolation and server-controlled entitlement boundaries are enforced and emulator-tested. Admin authority comes from server-provisioned ACL documents. Public reads are limited to catalog and selected app-content documents.",
+  "findings": [
+    {
+      "check": "Type Safety",
+      "severity": "minor",
+      "issue": "Family member lists are bounded to 20 entries, but individual nested entries are not fully schema-validated in Firestore rules. A user can corrupt their own family-member display data.",
+      "recommendation": "Use a validated server mutation or a typed family-member subcollection if stronger per-entry schema enforcement is required."
+    }
+  ]
+}

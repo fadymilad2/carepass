@@ -1,51 +1,31 @@
+import 'package:carepass/features/services/domain/entities/service_entities.dart';
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/entities/service_entities.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../domain/repositories/services_repository.dart';
 import '../datasources/services_remote_datasource.dart';
 
 class ServicesRepositoryImpl implements ServicesRepository {
-  final ServicesRemoteDataSource _remote;
-  ServicesRepositoryImpl(this._remote);
+  final ServicesRemoteDataSource _ds;
+  ServicesRepositoryImpl(this._ds);
 
   @override
-  Future<Either<Failure, List<MedicalService>>> getServices(
-    ServicesFilter filter,
+  Future<Either<Failure, List<ServiceEntity>>> getServicesByProvider(
+    String providerId,
   ) async {
     try {
-      final result = await _remote.getServices(filter);
-      return Right(result);
+      return Right(await _ds.getServicesByProvider(providerId));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
-    } catch (_) {
-      return const Left(ServerFailure());
     }
   }
 
   @override
-  Future<Either<Failure, List<MedicalService>>> searchServices({
-    required String query,
-    String? area,
-  }) async {
+  Future<Either<Failure, List<ServiceEntity>>> getAllServices() async {
     try {
-      final result = await _remote.searchServices(
-        query: query,
-        area: area,
-      );
-      return Right(result);
+      return Right(await _ds.getAllServices());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
-    } catch (_) {
-      return const Left(ServerFailure());
     }
-  }
-
-  @override
-  Future<Either<Failure, int>> getProviderCountForService({
-    required String serviceId,
-    required String area,
-  }) async {
-    return const Right(0);
   }
 }

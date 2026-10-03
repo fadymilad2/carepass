@@ -43,5 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+/functions/node_modules/
+/.firebase/
 # Firebase Options
 lib/firebase_options.dart
+
+# Local payment credentials and Firebase environment settings
+/functions/.secret.local
+/functions/.env
+/functions/.env.*
+!/functions/.env.example
+/.local/provider-merge/

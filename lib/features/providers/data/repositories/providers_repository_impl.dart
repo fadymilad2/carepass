@@ -24,8 +24,7 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
   }
 
   @override
-  Future<Either<Failure, MedicalProvider>> getProviderById(
-      String id) async {
+  Future<Either<Failure, MedicalProvider>> getProviderById(String id) async {
     try {
       final result = await _remote.getProviderById(id);
       return Right(result);
@@ -42,8 +41,7 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
     String? area,
   }) async {
     try {
-      final result =
-          await _remote.searchProviders(query: query, area: area);
+      final result = await _remote.searchProviders(query: query, area: area);
       return Right(result);
     } catch (_) {
       return const Left(ServerFailure());
@@ -52,6 +50,11 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
 
   @override
   Future<Either<Failure, void>> toggleFavorite(String providerId) async {
-    return const Right(null); // TODO: implement with local storage
+    try {
+      await _remote.toggleFavorite(providerId);
+      return const Right(null);
+    } catch (_) {
+      return const Left(ServerFailure('Could not update favorite.'));
+    }
   }
 }

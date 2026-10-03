@@ -27,11 +27,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UIApplicationSceneManifest</key>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>CarePass needs your location to show nearby services</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>CarePass needs your location to show nearby services</string>
+	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>

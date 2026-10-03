@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────
 //  User Summary Entity
@@ -22,19 +23,25 @@ class UserSummary extends Equatable {
     this.selectedArea,
   });
 
-  bool get isSubscribed => subscriptionStatus == SubscriptionStatus.active;
+  bool get isSubscribed =>
+      subscriptionStatus == SubscriptionStatus.active &&
+      cardExpiryDate?.isAfter(DateTime.now()) == true;
 
   String get firstName {
-  if (fullName.trim().isEmpty) return 'there';
-  return fullName.trim().split(' ').first;
-
-}
+    if (fullName.trim().isEmpty) return 'there';
+    return fullName.trim().split(' ').first;
+  }
 
   @override
   List<Object?> get props => [
-        id, fullName, photoUrl, memberId,
-        subscriptionStatus, cardExpiryDate, selectedArea,
-      ];
+    id,
+    fullName,
+    photoUrl,
+    memberId,
+    subscriptionStatus,
+    cardExpiryDate,
+    selectedArea,
+  ];
 }
 
 enum SubscriptionStatus { active, expired, pending, none }
@@ -88,5 +95,97 @@ class HomeQuickStat extends Equatable {
   });
 
   @override
-  List<Object?> get props => [nearbyProviders, availableServices, checkupsRemaining];
+  List<Object?> get props => [
+    nearbyProviders,
+    availableServices,
+    checkupsRemaining,
+  ];
+}
+
+class HomeServiceItem {
+  final String id;
+  final String name;
+  final String category;
+  final int discountPercent;
+  final IconData icon;
+
+  const HomeServiceItem({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.discountPercent,
+    required this.icon,
+  });
+
+  String get discountLabel => 'Up to $discountPercent% off';
+
+  IconData get categoryIcon {
+    switch (category) {
+      case 'consultation':
+        return Icons.person_outlined;
+      case 'radiology':
+        return Icons.image_outlined;
+      case 'lab':
+        return Icons.science_outlined;
+      case 'pharmacy':
+        return Icons.medication_outlined;
+      case 'dental':
+        return Icons.masks_outlined;
+      case 'physiotherapy':
+        return Icons.accessibility_outlined;
+      case 'blood_pressure':
+        return Icons.favorite_outlined;
+      case 'blood_sugar':
+        return Icons.water_drop_outlined;
+      default:
+        return Icons.medical_services_outlined;
+    }
+  }
+}
+
+class HomeProviderItem {
+  final String id;
+  final String name;
+  final String type;
+  final List<String> types;
+  final String phone;
+  final String area;
+  final double? distanceKm;
+
+  const HomeProviderItem({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.types = const [],
+    required this.phone,
+    required this.area,
+    this.distanceKm,
+  });
+
+  String get distanceLabel =>
+      distanceKm == null ? '' : '${distanceKm!.toStringAsFixed(1)} km';
+
+  String get typeLabel =>
+      (types.isEmpty ? [type] : types).map(_typeLabel).join(' · ');
+
+  static String _typeLabel(String type) {
+    switch (type) {
+      case 'hospital':
+        return 'Hospital';
+      case 'pharmacy':
+        return 'Pharmacy';
+      case 'lab':
+        return 'Laboratory';
+      case 'dental':
+        return 'Dental';
+      case 'eye_clinic':
+        return 'Eye Clinic';
+      case 'diagnostic':
+        return 'Diagnostic Center';
+      case 'doctor':
+        return 'Doctor';
+      default:
+        return 'Clinic';
+    }
+  }
 }

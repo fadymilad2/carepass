@@ -4,6 +4,7 @@ class MedicalProvider extends Equatable {
   final String id;
   final String name;
   final ProviderType type;
+  final List<ProviderType> types;
   final String imageUrl;
   final String logoUrl;
   final double rating;
@@ -20,11 +21,13 @@ class MedicalProvider extends Equatable {
   final double? latitude;
   final double? longitude;
   final bool isFavorite;
+  final String? area; // ✅ New field for area
 
   const MedicalProvider({
     required this.id,
     required this.name,
     required this.type,
+    this.types = const [],
     required this.imageUrl,
     required this.logoUrl,
     required this.rating,
@@ -41,59 +44,103 @@ class MedicalProvider extends Equatable {
     this.latitude,
     this.longitude,
     this.isFavorite = false,
+    this.area,
   });
 
-  String get distanceLabel => distanceKm != null
-      ? '${distanceKm!.toStringAsFixed(1)} km'
-      : '';
+  String get distanceLabel =>
+      distanceKm != null ? '${distanceKm!.toStringAsFixed(1)} km' : '';
 
   String get discountLabel => 'Up to $discountPercent% off';
 
-  String get typeLabel => type.label;
+  List<ProviderType> get providerTypes => types.isEmpty ? [type] : types;
+  bool offersType(ProviderType category) => providerTypes.contains(category);
+  String get typeLabel => providerTypes.map((value) => value.label).join(' · ');
 
   @override
-  List<Object?> get props => [id, name, isFavorite];
+  List<Object?> get props => [id, name, isFavorite, type, types];
 }
 
 // ─────────────────────────────────────────────
-enum ProviderType { clinic, hospital, pharmacy, lab, dental }
+enum ProviderType {
+  clinic,
+  hospital,
+  pharmacy,
+  lab,
+  dental,
+  eyeClinic,
+  diagnostic,
+  doctor,
+}
 
 extension ProviderTypeExt on ProviderType {
   String get label {
     switch (this) {
-      case ProviderType.clinic:   return 'Clinic';
-      case ProviderType.hospital: return 'Hospital';
-      case ProviderType.pharmacy: return 'Pharmacy';
-      case ProviderType.lab:      return 'Laboratory';
-      case ProviderType.dental:   return 'Dental Clinic';
+      case ProviderType.clinic:
+        return 'Clinic';
+      case ProviderType.hospital:
+        return 'Hospital';
+      case ProviderType.pharmacy:
+        return 'Pharmacy';
+      case ProviderType.lab:
+        return 'Laboratory';
+      case ProviderType.dental:
+        return 'Dental Clinic';
+      case ProviderType.eyeClinic:
+        return 'Eye Clinic';
+      case ProviderType.diagnostic:
+        return 'Diagnostic Center';
+      case ProviderType.doctor:
+        return 'Doctor';
     }
   }
 
   String get firestoreKey {
     switch (this) {
-      case ProviderType.clinic:   return 'clinic';
-      case ProviderType.hospital: return 'hospital';
-      case ProviderType.pharmacy: return 'pharmacy';
-      case ProviderType.lab:      return 'lab';
-      case ProviderType.dental:   return 'dental';
+      case ProviderType.clinic:
+        return 'clinic';
+      case ProviderType.hospital:
+        return 'hospital';
+      case ProviderType.pharmacy:
+        return 'pharmacy';
+      case ProviderType.lab:
+        return 'lab';
+      case ProviderType.dental:
+        return 'dental';
+      case ProviderType.eyeClinic:
+        return 'eye_clinic';
+      case ProviderType.diagnostic:
+        return 'diagnostic';
+      case ProviderType.doctor:
+        return 'doctor';
     }
   }
 
   static ProviderType fromString(String? v) {
     switch (v) {
-      case 'hospital': return ProviderType.hospital;
-      case 'pharmacy': return ProviderType.pharmacy;
-      case 'lab':      return ProviderType.lab;
-      case 'dental':   return ProviderType.dental;
-      default:         return ProviderType.clinic;
+      case 'hospital':
+        return ProviderType.hospital;
+      case 'pharmacy':
+        return ProviderType.pharmacy;
+      case 'lab':
+        return ProviderType.lab;
+      case 'dental':
+        return ProviderType.dental;
+      case 'eye_clinic':
+        return ProviderType.eyeClinic;
+      case 'diagnostic':
+        return ProviderType.diagnostic;
+      case 'doctor':
+        return ProviderType.doctor;
+      default:
+        return ProviderType.clinic;
     }
   }
 }
 
 // ─────────────────────────────────────────────
 class WorkingHours extends Equatable {
-  final String weekdays;  // e.g. "Sat - Thu: 9:00 AM - 9:00 PM"
-  final String friday;    // e.g. "Friday: 2:00 PM - 9:00 PM"
+  final String weekdays; // e.g. "Sat - Thu: 9:00 AM - 9:00 PM"
+  final String friday; // e.g. "Friday: 2:00 PM - 9:00 PM"
 
   const WorkingHours({required this.weekdays, required this.friday});
 
@@ -101,14 +148,11 @@ class WorkingHours extends Equatable {
     if (map == null) return const WorkingHours(weekdays: '', friday: '');
     return WorkingHours(
       weekdays: map['weekdays'] ?? '',
-      friday:   map['friday']   ?? '',
+      friday: map['friday'] ?? '',
     );
   }
 
-  Map<String, dynamic> toMap() => {
-    'weekdays': weekdays,
-    'friday':   friday,
-  };
+  Map<String, dynamic> toMap() => {'weekdays': weekdays, 'friday': friday};
 
   @override
   List<Object?> get props => [weekdays, friday];
@@ -120,9 +164,12 @@ enum ProviderSortOption { distance, rating, discount }
 extension ProviderSortExt on ProviderSortOption {
   String get label {
     switch (this) {
-      case ProviderSortOption.distance: return 'Distance';
-      case ProviderSortOption.rating:   return 'Rating';
-      case ProviderSortOption.discount: return 'Discount';
+      case ProviderSortOption.distance:
+        return 'Distance';
+      case ProviderSortOption.rating:
+        return 'Rating';
+      case ProviderSortOption.discount:
+        return 'Discount';
     }
   }
 }
@@ -137,7 +184,7 @@ class ProvidersFilter extends Equatable {
 
   const ProvidersFilter({
     this.type,
-    this.sortBy    = ProviderSortOption.distance,
+    this.sortBy = ProviderSortOption.distance,
     this.area,
     this.nearbyOnly = false,
     this.searchQuery,
@@ -151,10 +198,10 @@ class ProvidersFilter extends Equatable {
     String? searchQuery,
     bool clearType = false,
   }) => ProvidersFilter(
-    type:        clearType ? null : (type ?? this.type),
-    sortBy:      sortBy      ?? this.sortBy,
-    area:        area        ?? this.area,
-    nearbyOnly:  nearbyOnly  ?? this.nearbyOnly,
+    type: clearType ? null : (type ?? this.type),
+    sortBy: sortBy ?? this.sortBy,
+    area: area ?? this.area,
+    nearbyOnly: nearbyOnly ?? this.nearbyOnly,
     searchQuery: searchQuery ?? this.searchQuery,
   );
 

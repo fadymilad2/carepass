@@ -17,7 +17,7 @@ class AiAssistantRepositoryImpl implements AiAssistantRepository {
     try {
       final result = await _remote.analyzeSymptoms(
         symptoms: symptoms,
-        history:  history,
+        history: history,
       );
       return Right(result);
     } on ServerException catch (e) {
@@ -28,6 +28,5 @@ class AiAssistantRepositoryImpl implements AiAssistantRepository {
   }
 
   @override
-  Future<Either<Failure, void>> clearHistory() async =>
-      const Right(null);
+  Future<Either<Failure, void>> clearHistory() async => const Right(null);
 }

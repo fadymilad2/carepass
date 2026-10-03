@@ -7,6 +7,7 @@ class HealthCard extends Equatable {
   final CardStatus status;
   final DateTime validThru;
   final String planName;
+  final String subscriptionType; // ✅ NEW
   final List<CardBenefit> benefits;
 
   const HealthCard({
@@ -16,10 +17,16 @@ class HealthCard extends Equatable {
     required this.status,
     required this.validThru,
     required this.planName,
+    this.subscriptionType = 'individual', // ✅
     required this.benefits,
   });
 
-  bool get isActive => status == CardStatus.active;
+  bool get isActive =>
+      status == CardStatus.active && validThru.isAfter(DateTime.now());
+
+  // ✅ NEW
+  String get subscriptionTypeLabel =>
+      subscriptionType == 'family' ? 'Family' : 'Individual';
 
   String get validThruFormatted {
     final m = validThru.month.toString().padLeft(2, '0');
@@ -29,14 +36,33 @@ class HealthCard extends Equatable {
 
   String get validUntilFormatted {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[validThru.month - 1]} ${validThru.day}, ${validThru.year}';
   }
 
   @override
-  List<Object?> get props => [id, memberId, status];
+  List<Object?> get props => [
+    id,
+    memberId,
+    memberName,
+    status,
+    validThru,
+    planName,
+    subscriptionType,
+    benefits,
+  ];
 }
 
 enum CardStatus { active, expired, pending, suspended }
@@ -44,20 +70,29 @@ enum CardStatus { active, expired, pending, suspended }
 extension CardStatusExt on CardStatus {
   String get label {
     switch (this) {
-      case CardStatus.active:    return 'Active';
-      case CardStatus.expired:   return 'Expired';
-      case CardStatus.pending:   return 'Pending';
-      case CardStatus.suspended: return 'Suspended';
+      case CardStatus.active:
+        return 'Active';
+      case CardStatus.expired:
+        return 'Expired';
+      case CardStatus.pending:
+        return 'Pending';
+      case CardStatus.suspended:
+        return 'Suspended';
     }
   }
 
   static CardStatus fromString(String? v) {
     switch (v) {
-      case 'active':    return CardStatus.active;
-      case 'expired':   return CardStatus.expired;
-      case 'pending':   return CardStatus.pending;
-      case 'suspended': return CardStatus.suspended;
-      default:          return CardStatus.pending;
+      case 'active':
+        return CardStatus.active;
+      case 'expired':
+        return CardStatus.expired;
+      case 'pending':
+        return CardStatus.pending;
+      case 'suspended':
+        return CardStatus.suspended;
+      default:
+        return CardStatus.pending;
     }
   }
 }
@@ -68,7 +103,7 @@ class CardBenefit extends Equatable {
   final String description;
   final int totalAllowed;
   final int used;
-  final String period; // 'monthly' | 'yearly'
+  final String period;
 
   const CardBenefit({
     required this.id,

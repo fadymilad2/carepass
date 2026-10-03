@@ -1,260 +1,98 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../bloc/auth_bloc.dart';
+import 'terms_page.dart';
+
+part '../widgets/login/phone_step.dart';
+part '../widgets/login/otp_step.dart';
+part '../widgets/login/profile_step.dart';
+part '../widgets/login/terms_checkbox.dart';
+part '../widgets/login/field_label.dart';
+part '../widgets/login/confirm_row.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey     = GlobalKey<FormState>();
-  final _emailCtrl   = TextEditingController();
-  final _passwordCtrl= TextEditingController();
-  bool _obscure      = true;
+  final _phoneCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  AuthState? _stepState;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthSignInRequested(
-      email:    _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) context.go(AppRoutes.home);
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(AppRoutes.home);
+          }
+        }
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
               content: Text(state.message),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
-            ));
-          }
-        },
-        builder: (context, state) {
-          final loading = state is AuthLoading;
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimens.paddingLG),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 32),
-
-                    // Logo
-                    Container(
-                      width: 56, height: 56,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.favorite_rounded,
-                          color: Colors.white, size: 30),
-                    ),
-
-                    const SizedBox(height: 32),
-                    Text('Welcome back', style: AppTextStyles.headlineLarge),
-                    const SizedBox(height: 8),
-                    Text('Sign in to your CarePass account',
-                        style: AppTextStyles.bodyMedium
-                            .copyWith(color: AppColors.textSecondary)),
-
-                    const SizedBox(height: 40),
-
-                    // Email
-                    Text('Email', style: AppTextStyles.labelLarge),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        hintText: 'you@example.com',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Email is required';
-                        }
-                        if (!v.contains('@')) return 'Enter a valid email';
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Password
-                    Text('Password', style: AppTextStyles.labelLarge),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      obscureText: _obscure,
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Password is required';
-                        if (v.length < 6) return 'Min 6 characters';
-                        return null;
-                      },
-                    ),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => _showForgotPassword(context),
-                        child: Text('Forgot Password?',
-                            style: AppTextStyles.labelLarge
-                                .copyWith(color: AppColors.primary)),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Sign In button
-                    ElevatedButton(
-                      onPressed: loading ? null : _submit,
-                      child: loading
-                          ? const SizedBox(
-                              width: 22, height: 22,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2.5))
-                          : const Text('Sign In'),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Don't have an account? ",
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: AppColors.textSecondary)),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.register),
-                          child: Text('Sign Up',
-                              style: AppTextStyles.labelLarge
-                                  .copyWith(color: AppColors.primary)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
             ),
           );
-        },
-      ),
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _buildStep(context, state),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  void _showForgotPassword(BuildContext context) {
-    final emailCtrl = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: context.read<AuthBloc>(),
-        child: Padding(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Container(
-            padding: const EdgeInsets.all(AppDimens.paddingLG),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Reset Password',
-                    style: AppTextStyles.headlineSmall),
-                const SizedBox(height: 8),
-                Text('Enter your email and we\'ll send a reset link.',
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary)),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    hintText: 'you@example.com',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                BlocConsumer<AuthBloc, AuthState>(
-                  listener: (ctx, state) {
-                    if (state is AuthPasswordResetSent) {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Reset link sent! Check your email.'),
-                          backgroundColor: AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  builder: (ctx, state) {
-                    final loading = state is AuthLoading;
-                    return ElevatedButton(
-                      onPressed: loading
-                          ? null
-                          : () {
-                              if (emailCtrl.text.trim().isNotEmpty) {
-                                ctx.read<AuthBloc>().add(
-                                  AuthPasswordResetRequested(
-                                      emailCtrl.text.trim()),
-                                );
-                              }
-                            },
-                      child: loading
-                          ? const SizedBox(
-                              width: 22, height: 22,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2.5))
-                          : const Text('Send Reset Link'),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Widget _buildStep(BuildContext context, AuthState state) {
+    // Keep form state and entered values while a request is pending or fails.
+    final loading = state is AuthLoading;
+    if (state is! AuthLoading && state is! AuthError) _stepState = state;
+    state = _stepState ?? state;
+    if (state is AuthOtpSent) {
+      return _OtpStep(
+        phoneNumber: state.phoneNumber,
+        verificationId: state.verificationId,
+      );
+    }
+    if (state is AuthNeedsProfile) {
+      return _ProfileStep(uid: state.uid, phoneNumber: state.phoneNumber);
+    }
+    return _PhoneStep(
+      formKey: _formKey,
+      phoneCtrl: _phoneCtrl,
+      loading: loading,
     );
   }
 }
+
+// ─────────────────────────────────────────────
+//  Step 1: Phone
+// ─────────────────────────────────────────────

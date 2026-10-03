@@ -61,7 +61,7 @@ class ChatMessageModel extends ChatMessage {
       timestamp: DateTime.now(),
       suggestion: suggestion,
     );
-  } 
+  }
 
   Map<String, dynamic> toApiFormat() => {
     'role': role == MessageRole.user ? 'user' : 'assistant',

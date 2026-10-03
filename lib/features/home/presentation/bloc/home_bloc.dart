@@ -1,3 +1,5 @@
+import 'package:carepass/core/errors/failures.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/home_entities.dart';
@@ -6,138 +8,93 @@ import '../../domain/usecases/home_usecases.dart';
 // ═══════════════════════════════════════════════
 //  EVENTS
 // ═══════════════════════════════════════════════
-abstract class HomeEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+part 'home_event.dart';
+part 'home_state.dart';
 
-class HomeLoadRequested extends HomeEvent {}
-
-class HomeBannersRefreshRequested extends HomeEvent {}
-
-class HomeAreaChanged extends HomeEvent {
-  final String area;
-  HomeAreaChanged(this.area);
-  @override
-  List<Object?> get props => [area];
-}
-
-// ═══════════════════════════════════════════════
-//  STATES
-// ═══════════════════════════════════════════════
-abstract class HomeState extends Equatable {
-
-  const HomeState();
-  @override
-  List<Object?> get props => [];
-}
-
-class HomeInitial extends HomeState {}
-
-class HomeLoading extends HomeState {}
-
-class HomeLoaded extends HomeState {
-  final UserSummary user;
-  final List<HomeBanner> banners;
-  final HomeQuickStat? stats;
-  final bool isBannersLoading;
-
-  const HomeLoaded({
-    required this.user,
-    required this.banners,
-    this.stats,
-    this.isBannersLoading = false,
-  });
-
-  HomeLoaded copyWith({
-    UserSummary? user,
-    List<HomeBanner>? banners,
-    HomeQuickStat? stats,
-    bool? isBannersLoading,
-  }) {
-    return HomeLoaded(
-      user: user ?? this.user,
-      banners: banners ?? this.banners,
-      stats: stats ?? this.stats,
-      isBannersLoading: isBannersLoading ?? this.isBannersLoading,
-    );
-  }
-
-  @override
-  List<Object?> get props => [user, banners, stats, isBannersLoading];
-}
-
-class HomeError extends HomeState {
-  final String message;
-  const HomeError(this.message);
-  @override
-  List<Object?> get props => [message];
-}
-
-// ═══════════════════════════════════════════════
-//  BLOC
-// ═══════════════════════════════════════════════
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetUserSummary _getUserSummary;
   final GetHomeBanners _getHomeBanners;
   final GetHomeQuickStats _getHomeQuickStats;
+  // ✅ تعريف الـ UseCases الجديدة
+  final GetPopularServices _getPopularServices;
+  final GetNearbyProviders _getNearbyProviders;
+  int _loadVersion = 0;
 
   HomeBloc({
     required GetUserSummary getUserSummary,
     required GetHomeBanners getHomeBanners,
     required GetHomeQuickStats getHomeQuickStats,
-  })  : _getUserSummary = getUserSummary,
-        _getHomeBanners = getHomeBanners,
-        _getHomeQuickStats = getHomeQuickStats,
-        super(HomeInitial()) {
+    required GetPopularServices getPopularServices,
+    required GetNearbyProviders getNearbyProviders,
+  }) : _getUserSummary = getUserSummary,
+       _getHomeBanners = getHomeBanners,
+       _getHomeQuickStats = getHomeQuickStats,
+       _getPopularServices = getPopularServices,
+       _getNearbyProviders = getNearbyProviders,
+       super(HomeInitial()) {
     on<HomeLoadRequested>(_onLoad);
     on<HomeBannersRefreshRequested>(_onRefreshBanners);
     on<HomeAreaChanged>(_onAreaChanged);
   }
 
-  Future<void> _onLoad(
-    HomeLoadRequested event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onLoad(HomeLoadRequested event, Emitter<HomeState> emit) async {
+    final version = ++_loadVersion;
     emit(HomeLoading());
 
     // Step 1: Get user
     final userResult = await _getUserSummary();
-    
-    // هنستخدم طريقة الـ await fold عشان الـ BLoC يستنى النتيجة صح
+
     await userResult.fold(
       (failure) async {
+        if (emit.isDone || version != _loadVersion) return;
         emit(HomeError(failure.message));
       },
       (user) async {
-        // Step 2: Load banners & stats in parallel
+        if (emit.isDone || version != _loadVersion) return;
+        // Step 2: Load banners, stats, services, & providers in parallel
         final results = await Future.wait([
           _getHomeBanners(
-            isSubscribed: user.subscriptionStatus != SubscriptionStatus.none, // عدلها حسب الـ entity بتاعك
+            isSubscribed: user.subscriptionStatus != SubscriptionStatus.none,
             area: user.selectedArea,
           ),
-          _getHomeQuickStats(
-            userId: user.id,
-            area: user.selectedArea,
-          ),
+          _getHomeQuickStats(userId: user.id, area: user.selectedArea),
+          _getPopularServices(user.selectedArea ?? ''), // ✅ جلب الخدمات
+          _getNearbyProviders(user.selectedArea ?? ''), // ✅ جلب البروفايدرز
         ]);
+        if (emit.isDone || version != _loadVersion) return;
 
-        final bannersResult = results[0];
-        final statsResult = results[1];
-
-        // استخراج البانرات
-        final banners = bannersResult.fold(
+        // استخراج النتائج بـ fold عشان نفصل النجاح عن الفشل (Clean Architecture)
+        final banners = (results[0] as Either<Failure, List<HomeBanner>>).fold(
           (_) => <HomeBanner>[],
-          (b) => b as List<HomeBanner>,
+          (b) => b,
         );
 
-        // استخراج الإحصائيات
-        final stats = statsResult.fold(
+        final stats = (results[1] as Either<Failure, HomeQuickStat>).fold(
           (_) => null,
-          (s) => s as HomeQuickStat,
+          (s) => s,
         );
 
-        emit(HomeLoaded(user: user, banners: banners, stats: stats));
+        final services = (results[2] as Either<Failure, List<HomeServiceItem>>)
+            .fold((_) => <HomeServiceItem>[], (s) => s);
+
+        final providers =
+            (results[3] as Either<Failure, List<HomeProviderItem>>).fold(
+              (_) => <HomeProviderItem>[],
+              (p) => p,
+            );
+
+        emit(
+          HomeLoaded(
+            user: user,
+            banners: banners,
+            stats: stats,
+            services: services, // ✅ إرسال الخدمات للـ UI
+            providers: providers, // ✅ إرسال البروفايدرز للـ UI
+            hasProvidersError:
+                (results[3] as Either<Failure, List<HomeProviderItem>>)
+                    .isLeft(),
+          ),
+        );
       },
     );
   }
@@ -149,16 +106,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (state is! HomeLoaded) return;
     final current = state as HomeLoaded;
 
+    final version = _loadVersion;
+
     emit(current.copyWith(isBannersLoading: true));
 
     final result = await _getHomeBanners(
       isSubscribed: current.user.isSubscribed,
       area: current.user.selectedArea,
     );
+    if (emit.isDone || version != _loadVersion || state is! HomeLoaded) return;
+    final latest = state as HomeLoaded;
 
     result.fold(
-      (_) => emit(current.copyWith(isBannersLoading: false)),
-      (banners) => emit(current.copyWith(banners: banners, isBannersLoading: false)),
+      (_) => emit(latest.copyWith(isBannersLoading: false)),
+      (banners) =>
+          emit(latest.copyWith(banners: banners, isBannersLoading: false)),
     );
   }
 
@@ -168,16 +130,44 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     if (state is! HomeLoaded) return;
     final current = state as HomeLoaded;
-
-    // Reload banners for new area
-    final result = await _getHomeBanners(
-      isSubscribed: current.user.isSubscribed,
-      area: event.area,
+    final version = ++_loadVersion;
+    emit(
+      current.copyWith(
+        providers: [],
+        hasProvidersError: false,
+        isProvidersLoading: true,
+      ),
     );
 
-    result.fold(
-      (_) {},
-      (banners) => emit(current.copyWith(banners: banners)),
+    // Reload banners, services, and providers for the new area
+    final results = await Future.wait([
+      _getHomeBanners(
+        isSubscribed: current.user.isSubscribed,
+        area: event.area,
+      ),
+      _getPopularServices(event.area),
+      _getNearbyProviders(event.area),
+    ]);
+    if (emit.isDone || version != _loadVersion) return;
+
+    final banners = (results[0] as Either<Failure, List<HomeBanner>>).fold(
+      (_) => current.banners,
+      (b) => b,
+    );
+    final services = (results[1] as Either<Failure, List<HomeServiceItem>>)
+        .fold((_) => current.services, (s) => s);
+    final providers = (results[2] as Either<Failure, List<HomeProviderItem>>)
+        .fold((_) => <HomeProviderItem>[], (p) => p);
+
+    emit(
+      current.copyWith(
+        banners: banners,
+        services: services,
+        providers: providers,
+        isProvidersLoading: false,
+        hasProvidersError:
+            (results[2] as Either<Failure, List<HomeProviderItem>>).isLeft(),
+      ),
     );
   }
 }

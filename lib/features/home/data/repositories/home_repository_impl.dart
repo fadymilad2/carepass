@@ -52,11 +52,39 @@ class HomeRepositoryImpl implements HomeRepository {
         userId: userId,
         area: area,
       );
-      return Right(HomeQuickStat(
-        nearbyProviders:   data['nearbyProviders']   as int,
-        availableServices: data['availableServices'] as int,
-        checkupsRemaining: data['checkupsRemaining'] as int,
-      ));
+      return Right(
+        HomeQuickStat(
+          nearbyProviders: data['nearbyProviders'] as int,
+          availableServices: data['availableServices'] as int,
+          checkupsRemaining: data['checkupsRemaining'] as int,
+        ),
+      );
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<HomeProviderItem>>> getNearbyProviders(
+    String area,
+  ) async {
+    try {
+      return Right(await remoteDataSource.getNearbyProviders(area));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<HomeServiceItem>>> getPopularServices(
+    String area,
+  ) async {
+    try {
+      return Right(await remoteDataSource.getPopularServices(area));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (_) {

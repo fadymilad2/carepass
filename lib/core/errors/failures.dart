@@ -20,7 +20,9 @@ class ServerFailure extends Failure {
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Authentication failed, please try again']);
+  const AuthFailure([
+    super.message = 'Authentication failed, please try again',
+  ]);
 }
 
 class CacheFailure extends Failure {
@@ -36,7 +38,9 @@ class PaymentFailure extends Failure {
 }
 
 class PermissionFailure extends Failure {
-  const PermissionFailure([super.message = 'Permissions are required to proceed']);
+  const PermissionFailure([
+    super.message = 'Permissions are required to proceed',
+  ]);
 }
 
 class ValidationFailure extends Failure {

@@ -1,4 +1,5 @@
-const apiKey = "AIzaSyBsgXc3TLxzOmMNFLoobCnzQNpqB2OtqnU";
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) throw new Error('Set GEMINI_API_KEY before running this diagnostic.');
 
 fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`)
   .then(response => response.json())

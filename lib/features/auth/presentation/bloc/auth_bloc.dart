@@ -3,166 +3,112 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/auth_entities.dart';
 import '../../domain/usecases/auth_usecases.dart';
 
-// ── Events ───────────────────────────────────────────────────────────────────
-abstract class AuthEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+// ── Events ────────────────────────────────────────────────────────────
+part 'auth_event.dart';
+part 'auth_state.dart';
 
-class AuthCheckRequested extends AuthEvent {}
-
-class AuthSignInRequested extends AuthEvent {
-  final String email;
-  final String password;
-  AuthSignInRequested({required this.email, required this.password});
-  @override
-  List<Object?> get props => [email];
-}
-
-class AuthRegisterRequested extends AuthEvent {
-  final String username;
-  final String email;
-  final String password;
-  AuthRegisterRequested({
-    required this.username,
-    required this.email,
-    required this.password,
-  });
-  @override
-  List<Object?> get props => [username, email];
-}
-
-class AuthSignOutRequested extends AuthEvent {}
-
-class AuthPasswordResetRequested extends AuthEvent {
-  final String email;
-  AuthPasswordResetRequested(this.email);
-  @override
-  List<Object?> get props => [email];
-}
-
-// ── States ───────────────────────────────────────────────────────────────────
-abstract class AuthState extends Equatable {
-  const AuthState();
-  @override
-  List<Object?> get props => [];
-}
-
-class AuthInitial extends AuthState {}
-class AuthLoading extends AuthState {}
-class AuthUnauthenticated extends AuthState {}
-class AuthPasswordResetSent extends AuthState {}
-
-class AuthAuthenticated extends AuthState {
-  final AppUser user;
-  const AuthAuthenticated(this.user);
-  @override
-  List<Object?> get props => [user];
-}
-
-class AuthError extends AuthState {
-  final String message;
-  const AuthError(this.message);
-  @override
-  List<Object?> get props => [message];
-}
-
-// ── BLoC ─────────────────────────────────────────────────────────────────────
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final SignIn _signIn;
-  final Register _register;
+  final SendOtp _sendOtp;
+  final VerifyOtp _verifyOtp;
+  final CreateProfile _createProfile;
   final GetCurrentUser _getCurrentUser;
   final SignOut _signOut;
-  final SendPasswordReset _sendPasswordReset;
 
   AuthBloc({
-    required SignIn signIn,
-    required Register register,
+    required SendOtp sendOtp,
+    required VerifyOtp verifyOtp,
+    required CreateProfile createProfile,
     required GetCurrentUser getCurrentUser,
     required SignOut signOut,
-    required SendPasswordReset sendPasswordReset,
-  })  : _signIn = signIn,
-        _register = register,
-        _getCurrentUser = getCurrentUser,
-        _signOut = signOut,
-        _sendPasswordReset = sendPasswordReset,
-        super(AuthInitial()) {
+  }) : _sendOtp = sendOtp,
+       _verifyOtp = verifyOtp,
+       _createProfile = createProfile,
+       _getCurrentUser = getCurrentUser,
+       _signOut = signOut,
+       super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheck);
-    on<AuthSignInRequested>(_onSignIn);
-    on<AuthRegisterRequested>(_onRegister);
+    on<AuthSendOtpRequested>(_onSendOtp);
+    on<AuthVerifyOtpRequested>(_onVerifyOtp);
+    on<AuthCreateProfileRequested>(_onCreateProfile);
     on<AuthSignOutRequested>(_onSignOut);
-    on<AuthPasswordResetRequested>(_onPasswordReset);
   }
 
-  Future<void> _onCheck(
-    AuthCheckRequested e,
-    Emitter<AuthState> emit,
-  ) async {
+  Future<void> _onCheck(AuthCheckRequested e, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     final result = await _getCurrentUser();
-
-    if (result.isLeft()) {
-      emit(AuthUnauthenticated());
-      return;
-    }
-
-    final user = result.getOrElse(() => null);
-    user != null
-        ? emit(AuthAuthenticated(user))
-        : emit(AuthUnauthenticated());
+    result.fold((failure) => emit(AuthUnauthenticated()), (user) {
+      if (user == null) {
+        emit(AuthUnauthenticated());
+      } else if (!user.hasProfile) {
+        emit(AuthNeedsProfile(uid: user.uid, phoneNumber: user.phoneNumber));
+      } else {
+        emit(AuthAuthenticated(user));
+      }
+    });
   }
 
-  Future<void> _onSignIn(
-    AuthSignInRequested e,
+  Future<void> _onSendOtp(
+    AuthSendOtpRequested e,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    final result = await _signIn(email: e.email, password: e.password);
-
-    if (result.isLeft()) {
-      emit(AuthError(result.fold((f) => f.message, (_) => '')));
-      return;
-    }
-
-    emit(AuthAuthenticated(result.getOrElse(() => throw Exception())));
-  }
-
-  Future<void> _onRegister(
-    AuthRegisterRequested e,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    final result = await _register(
-      username: e.username,
-      email: e.email,
-      password: e.password,
+    final result = await _sendOtp(e.phoneNumber);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (verificationId) => emit(
+        AuthOtpSent(verificationId: verificationId, phoneNumber: e.phoneNumber),
+      ),
     );
+  }
 
-    if (result.isLeft()) {
-      emit(AuthError(result.fold((f) => f.message, (_) => '')));
-      return;
-    }
+  Future<void> _onVerifyOtp(
+    AuthVerifyOtpRequested e,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await _verifyOtp(
+      verificationId: e.verificationId,
+      otp: e.otp,
+    );
+    result.fold((failure) => emit(AuthError(failure.message)), (user) {
+      if (!user.hasProfile) {
+        emit(AuthNeedsProfile(uid: user.uid, phoneNumber: user.phoneNumber));
+      } else {
+        emit(AuthAuthenticated(user));
+      }
+    });
+  }
 
-    emit(AuthAuthenticated(result.getOrElse(() => throw Exception())));
+  Future<void> _onCreateProfile(
+    AuthCreateProfileRequested e,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    // ✅ Pass all new fields to use case
+    final result = await _createProfile(
+      uid: e.uid,
+      username: e.username,
+      phoneNumber: e.phoneNumber,
+      email: e.email,
+      dateOfBirth: e.dateOfBirth,
+      city: e.city,
+      emergencyContact: e.emergencyContact,
+      bloodType: e.bloodType,
+    );
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
+    );
   }
 
   Future<void> _onSignOut(
     AuthSignOutRequested e,
     Emitter<AuthState> emit,
   ) async {
-    await _signOut();
-    emit(AuthUnauthenticated());
-  }
-
-  Future<void> _onPasswordReset(
-    AuthPasswordResetRequested e,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    final result = await _sendPasswordReset(e.email);
-
-    result.isLeft()
-        ? emit(AuthError(result.fold((f) => f.message, (_) => '')))
-        : emit(AuthPasswordResetSent());
+    final result = await _signOut();
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(AuthUnauthenticated()),
+    );
   }
 }

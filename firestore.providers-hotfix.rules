@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+    }
+
+    function isSuperAdmin() {
+      return isAdmin() &&
+        get(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+          .data.role == 'super_admin';
+    }
+
+    function isActiveAdmin() {
+      return isAdmin() &&
+        get(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+          .data.isActive == true;
+    }
+
+    // ── Users ──────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isActiveAdmin();
+
+      // Favorites are private to their owner; only existing providers can be saved.
+      match /favorites/{providerId} {
+        function validFavorite() {
+          return request.resource.data.keys().hasOnly(['providerId'])
+            && request.resource.data.providerId is string
+            && request.resource.data.providerId.size() <= 1500
+            && request.resource.data.providerId == providerId
+            && exists(/databases/$(database)/documents/providers/$(providerId));
+        }
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validFavorite();
+      }
+
+      match /payments/{paymentId} {
+        allow read, write: if isOwner(userId) || isActiveAdmin();
+      }
+
+      match /notifications/{notifId} {
+        allow read, write: if isOwner(userId) || isActiveAdmin();
+      }
+
+      match /checkups/{checkupId} {
+        allow read, write: if isOwner(userId) || isActiveAdmin();
+      }
+    }
+
+    match /{path=**}/payments/{paymentId} {
+      allow read, write: if isActiveAdmin();
+    }
+
+    match /{path=**}/notifications/{notifId} {
+      allow read, write: if isActiveAdmin();
+    }
+
+    // ── Providers ✅ Fixed — متاح للجميع حتى قبل تسجيل الدخول ──────────
+    match /providers/{providerId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Services ───────────────────────────────────────────────────────
+    match /services/{serviceId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Home Banners ✅ Fixed — متاح للجميع كمان (بيظهر في الهوم للـ guests) ──
+    match /home_banners/{bannerId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Discount Codes ─────────────────────────────────────────────────
+    match /discount_codes/{codeId} {
+      allow read:  if isAuthenticated();
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Admin Users ────────────────────────────────────────────────────
+    match /admin_users/{adminId} {
+      allow read:  if isActiveAdmin() || isOwner(adminId);
+      allow write: if isSuperAdmin();
+    }
+
+    // ── Notification History ───────────────────────────────────────────
+    match /notification_history/{notifId} {
+      allow read, write: if isActiveAdmin();
+    }
+
+    // ── Subscription Plans ─────────────────────────────────────────────
+    match /subscription_plans/{planId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Service Categories ✅ New ─────────────────────────────────────
+    match /service_categories/{catId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+
+    // ── Settings ───────────────────────────────────────────────────────
+    match /settings/{docId} {
+      allow read:  if true;
+      allow write: if isActiveAdmin();
+    }
+  }
+}

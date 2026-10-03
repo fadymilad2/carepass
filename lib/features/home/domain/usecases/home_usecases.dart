@@ -44,3 +44,22 @@ class GetHomeQuickStats {
     return repository.getHomeQuickStats(userId: userId, area: area);
   }
 }
+// ... باقي الـ UseCases اللي عندك
+
+class GetPopularServices {
+  final HomeRepository repository;
+  GetPopularServices(this.repository);
+
+  Future<Either<Failure, List<HomeServiceItem>>> call(String area) {
+    return repository.getPopularServices(area);
+  }
+}
+
+class GetNearbyProviders {
+  final HomeRepository repository;
+  GetNearbyProviders(this.repository);
+
+  Future<Either<Failure, List<HomeProviderItem>>> call(String area) {
+    return repository.getNearbyProviders(area);
+  }
+}

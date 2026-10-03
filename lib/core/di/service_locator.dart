@@ -8,7 +8,7 @@ import 'package:carepass/features/ai_assistant/data/repositories/ai_repository_i
 import 'package:carepass/features/ai_assistant/domain/repositories/ai_repository.dart';
 import 'package:carepass/features/ai_assistant/domain/usecases/ai_usecases.dart';
 import 'package:carepass/features/ai_assistant/presentation/bloc/ai_bloc.dart';
-import 'package:carepass/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:carepass/features/auth/data/datasources/auth_datasource.dart';
 import 'package:carepass/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:carepass/features/auth/domain/repositories/auth_repository.dart';
 import 'package:carepass/features/auth/domain/usecases/auth_usecases.dart';
@@ -23,6 +23,11 @@ import 'package:carepass/features/home/data/repositories/home_repository_impl.da
 import 'package:carepass/features/home/domain/repositories/home_repository.dart';
 import 'package:carepass/features/home/domain/usecases/home_usecases.dart';
 import 'package:carepass/features/home/presentation/bloc/home_bloc.dart';
+import 'package:carepass/features/payment/data/datasources/payment_remote_datasource.dart';
+import 'package:carepass/features/payment/data/repositories/payment_repository_impl.dart';
+import 'package:carepass/features/payment/domain/repositories/payment_repository.dart';
+import 'package:carepass/features/payment/domain/usecases/payment_usecases.dart';
+import 'package:carepass/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:carepass/features/providers/data/datasources/providers_remote_datasource.dart';
 import 'package:carepass/features/providers/data/repositories/providers_repository_impl.dart';
 import 'package:carepass/features/providers/domain/repositories/providers_repository.dart';
@@ -31,22 +36,17 @@ import 'package:carepass/features/providers/presentation/bloc/providers_bloc.dar
 import 'package:carepass/features/services/data/datasources/services_remote_datasource.dart';
 import 'package:carepass/features/services/data/repositories/services_repository_impl.dart';
 import 'package:carepass/features/services/domain/repositories/services_repository.dart';
-import 'package:carepass/features/services/domain/usecases/services_usecases.dart';
+import 'package:carepass/features/services/domain/usecases/get_services.dart';
 import 'package:carepass/features/services/presentation/bloc/services_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
-// استدعي ملفات الـ Home اللي عملناها
- // مسار ملف الـ NetworkInfo لو عامله
 
 final GetIt sl = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // ─── Core ─────────────────────────────────────────────────────────────
   _registerCore();
-
-  // ─── Features ──────────────────────────────────────────────────────────
   _registerAuth();
   _registerHome();
   _registerServices();
@@ -57,164 +57,168 @@ Future<void> setupDependencies() async {
   _registerAiAssistant();
 }
 
+// ── Core ───────────────────────────────────────────────────────────────
 void _registerCore() {
-  // تسجيل أدوات فايربيز الأساسية
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
-  sl.registerLazySingleton(() => FirebaseAuth.instance); // ضفنا دي عشان الـ Auth
-
-  // Network checker (فك الكومنت بتاعها لو عملت الكلاس بتاعها)
-  // sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl()); 
+  sl.registerLazySingleton(() => FirebaseAuth.instance);
 }
 
+// ── Auth ───────────────────────────────────────────────────────────────
+void _registerAuth() {
+  sl.registerLazySingleton<AuthDataSource>(
+    () => AuthDataSourceImpl(auth: sl(), db: sl()),
+  );
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => SendOtp(sl()));
+  sl.registerLazySingleton(() => VerifyOtp(sl()));
+  sl.registerLazySingleton(() => CreateProfile(sl()));
+  sl.registerLazySingleton(() => GetCurrentUser(sl()));
+  sl.registerLazySingleton(() => SignOut(sl()));
+
+  sl.registerFactory(
+    () => AuthBloc(
+      sendOtp: sl(),
+      verifyOtp: sl(),
+      createProfile: sl(),
+      getCurrentUser: sl(),
+      signOut: sl(),
+    ),
+  );
+}
+
+// ── Home ───────────────────────────────────────────────────────────────
 void _registerHome() {
-  // 1. Data Sources
   sl.registerLazySingleton<HomeRemoteDataSource>(
-    () => HomeRemoteDataSourceImpl(
-      firestore: sl(),
-      auth: sl(), // دلوقتي GetIt هيعرف يجيب الـ FirebaseAuth ويبعتها هنا
-    ),
+    () => HomeRemoteDataSourceImpl(firestore: sl(), auth: sl()),
   );
-
-  // 2. Repository
   sl.registerLazySingleton<HomeRepository>(
-    () => HomeRepositoryImpl(
-      remoteDataSource: sl(),
-    ),
+    () => HomeRepositoryImpl(remoteDataSource: sl()),
   );
-
-  // 3. Use Cases
   sl.registerLazySingleton(() => GetUserSummary(sl()));
   sl.registerLazySingleton(() => GetHomeBanners(sl()));
   sl.registerLazySingleton(() => GetHomeQuickStats(sl()));
+  sl.registerLazySingleton(() => GetPopularServices(sl()));
+  sl.registerLazySingleton(() => GetNearbyProviders(sl()));
 
-  // 4. Bloc
   sl.registerFactory(
     () => HomeBloc(
       getUserSummary: sl(),
       getHomeBanners: sl(),
+      getPopularServices: sl(),
+      getNearbyProviders: sl(),
       getHomeQuickStats: sl(),
     ),
   );
 }
 
-// ───────────────────────────────────────────────────────────────────────
-// باقي الفيتشرز سيبها كومنت زي ما هي لحد ما نبنيها
-// ───────────────────────────────────────────────────────────────────────
-void _registerAuth() {
-  sl.registerFactory(() => AuthBloc(
-    signIn:             sl(),
-    register:           sl(),
-    getCurrentUser:     sl(),
-    signOut:            sl(),
-    sendPasswordReset:  sl(),
-  ));
-
-  sl.registerLazySingleton(() => SignIn(sl()));
-  sl.registerLazySingleton(() => Register(sl()));
-  sl.registerLazySingleton(() => GetCurrentUser(sl()));
-  sl.registerLazySingleton(() => SignOut(sl()));
-  sl.registerLazySingleton(() => SendPasswordReset(sl()));
-
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(sl()),
-  );
-
-  sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(
-      auth:      FirebaseAuth.instance,
-      firestore: FirebaseFirestore.instance,
-    ),
-  );
-}
-
+// ── Services ───────────────────────────────────────────────────────────
 void _registerServices() {
-  sl.registerFactory(() => ServicesBloc(
-    getServices:    sl(),
-    searchServices: sl(),
-  ));
-
-  sl.registerLazySingleton(() => GetServices(sl()));
-  sl.registerLazySingleton(() => SearchServices(sl()));
-
+  sl.registerLazySingleton<ServicesRemoteDataSource>(
+    () => ServicesRemoteDataSourceImpl(sl()),
+  );
   sl.registerLazySingleton<ServicesRepository>(
     () => ServicesRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton(() => GetServicesByProvider(sl()));
+  sl.registerLazySingleton(() => GetAllServices(sl()));
 
-  sl.registerLazySingleton<ServicesRemoteDataSource>(
-    () => ServicesRemoteDataSourceImpl(
-      firestore: FirebaseFirestore.instance,
-    ),
-  );
+  sl.registerFactory(() => ServicesBloc(getByProvider: sl(), getAll: sl()));
 }
+
+// ── Card ───────────────────────────────────────────────────────────────
 void _registerCard() {
-  sl.registerFactory(() => CardBloc(
-    getCard:   sl(),
-    renewCard: sl(),
-  ));
-  sl.registerLazySingleton(() => GetUserCard(sl()));
-  sl.registerLazySingleton(() => RenewCard(sl()));
-  sl.registerLazySingleton<CardRepository>(
-    () => CardRepositoryImpl(sl()),
-  );
   sl.registerLazySingleton<CardRemoteDataSource>(
     () => CardRemoteDataSourceImpl(
       firestore: FirebaseFirestore.instance,
-      auth:      FirebaseAuth.instance,
+      auth: FirebaseAuth.instance,
     ),
   );
-}
-void _registerProviders() {
-  sl.registerFactory(() => ProvidersBloc(
-    getProviders:    sl(),
-    getProviderById: sl(),
-    searchProviders: sl(),
-    toggleFavorite:  sl(),
-  ));
+  sl.registerLazySingleton<CardRepository>(() => CardRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => GetUserCard(sl()));
+  sl.registerLazySingleton(() => RenewCard(sl()));
 
+  sl.registerFactory(
+    () => CardBloc(getCard: sl(), renewCard: sl(), auth: sl()),
+  );
+}
+
+// ── Providers ──────────────────────────────────────────────────────────
+void _registerProviders() {
+  sl.registerLazySingleton<ProvidersRemoteDataSource>(
+    () => ProvidersRemoteDataSourceImpl(firestore: FirebaseFirestore.instance),
+  );
+  sl.registerLazySingleton<ProvidersRepository>(
+    () => ProvidersRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton(() => GetProviders(sl()));
   sl.registerLazySingleton(() => GetProviderById(sl()));
   sl.registerLazySingleton(() => SearchProviders(sl()));
   sl.registerLazySingleton(() => ToggleFavorite(sl()));
 
-  sl.registerLazySingleton<ProvidersRepository>(
-    () => ProvidersRepositoryImpl(sl()),
-  );
-
-  sl.registerLazySingleton<ProvidersRemoteDataSource>(
-    () => ProvidersRemoteDataSourceImpl(
-      firestore: FirebaseFirestore.instance,
+  sl.registerFactory(
+    () => ProvidersBloc(
+      getProviders: sl(),
+      getProviderById: sl(),
+      searchProviders: sl(),
+      toggleFavorite: sl(),
     ),
   );
 }
+
+// ── Account ────────────────────────────────────────────────────────────
 void _registerAccount() {
-  sl.registerFactory(() => AccountBloc(
-    getUser:        sl(),
-    updateUsername: sl(),
-    signOut:        sl(),
-  ));
-  sl.registerLazySingleton(() => GetAccountUser(sl()));
-  sl.registerLazySingleton(() => UpdateUsername(sl()));
-  sl.registerLazySingleton(() => AccountSignOut(sl()));
-  sl.registerLazySingleton<AccountRepository>(
-    () => AccountRepositoryImpl(sl()),
-  );
   sl.registerLazySingleton<AccountRemoteDataSource>(
     () => AccountRemoteDataSourceImpl(
       firestore: FirebaseFirestore.instance,
-      auth:      FirebaseAuth.instance,
+      auth: FirebaseAuth.instance,
+    ),
+  );
+  sl.registerLazySingleton<AccountRepository>(
+    () => AccountRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetAccountUser(sl()));
+  sl.registerLazySingleton(() => UpdateUsername(sl()));
+  sl.registerLazySingleton(() => UpdateProfile(sl())); // ✅ New
+  sl.registerLazySingleton(() => AccountSignOut(sl()));
+
+  sl.registerFactory(
+    () => AccountBloc(
+      getUser: sl(),
+      updateUsername: sl(),
+      updateProfile: sl(), // ✅ New
+      signOut: sl(),
     ),
   );
 }
-void _registerPayment() {}
-void _registerAiAssistant() {
-  sl.registerFactory(() => AiBloc(analyze: sl()));
-  sl.registerLazySingleton(() => AnalyzeSymptoms(sl()));
-  sl.registerLazySingleton<AiAssistantRepository>(
-    () => AiAssistantRepositoryImpl(sl()),
-  );
-  sl.registerLazySingleton<AiRemoteDataSource>(
-    () => AiRemoteDataSourceImpl(
+
+// ── Payment ────────────────────────────────────────────────────────────
+void _registerPayment() {
+  sl.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+      auth: FirebaseAuth.instance,
       functions: FirebaseFunctions.instance,
     ),
   );
+  sl.registerLazySingleton<PaymentRepository>(
+    () => PaymentRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetPlans(sl()));
+  sl.registerLazySingleton(() => InitializePayment(sl()));
+  sl.registerLazySingleton(() => VerifyPayment(sl()));
+
+  sl.registerFactory(() => PaymentBloc(dataSource: sl()));
+}
+
+// ── AI Assistant ───────────────────────────────────────────────────────
+void _registerAiAssistant() {
+  sl.registerLazySingleton<AiRemoteDataSource>(
+    () => AiRemoteDataSourceImpl(functions: FirebaseFunctions.instance),
+  );
+  sl.registerLazySingleton<AiAssistantRepository>(
+    () => AiAssistantRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => AnalyzeSymptoms(sl()));
+
+  sl.registerFactory(() => AiBloc(analyze: sl()));
 }

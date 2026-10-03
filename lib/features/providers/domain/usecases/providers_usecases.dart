@@ -6,9 +6,8 @@ import '../repositories/providers_repository.dart';
 class GetProviders {
   final ProvidersRepository repo;
   GetProviders(this.repo);
-  Future<Either<Failure, List<MedicalProvider>>> call(
-    ProvidersFilter filter,
-  ) => repo.getProviders(filter);
+  Future<Either<Failure, List<MedicalProvider>>> call(ProvidersFilter filter) =>
+      repo.getProviders(filter);
 }
 
 class GetProviderById {
@@ -30,6 +29,5 @@ class SearchProviders {
 class ToggleFavorite {
   final ProvidersRepository repo;
   ToggleFavorite(this.repo);
-  Future<Either<Failure, void>> call(String id) =>
-      repo.toggleFavorite(id);
+  Future<Either<Failure, void>> call(String id) => repo.toggleFavorite(id);
 }

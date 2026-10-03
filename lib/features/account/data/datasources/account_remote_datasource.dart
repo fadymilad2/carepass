@@ -7,6 +7,13 @@ import '../models/account_models.dart';
 abstract class AccountRemoteDataSource {
   Future<AccountUserModel> getAccountUser();
   Future<void> updateUsername(String username);
+  // ✅ New method
+  Future<void> updateProfile({
+    String? email,
+    String? city,
+    String? bloodType,
+    String? emergencyContact,
+  });
   Future<void> signOut();
 }
 
@@ -17,9 +24,10 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
   AccountRemoteDataSourceImpl({
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
-  })  : _firestore = firestore,
-        _auth = auth;
+  }) : _firestore = firestore,
+       _auth = auth;
 
+  // ── Get Account User ────────────────────────────────────────────────
   @override
   Future<AccountUserModel> getAccountUser() async {
     try {
@@ -37,25 +45,68 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
 
       return AccountUserModel.fromFirestore(doc.data()!, uid);
     } on FirebaseException catch (e) {
-      throw ServerException(e.message ?? 'Failed');
+      throw ServerException(e.message ?? 'Failed to load user');
     }
   }
 
+  // ── Update Username ─────────────────────────────────────────────────
   @override
   Future<void> updateUsername(String username) async {
     try {
       final uid = _auth.currentUser?.uid;
       if (uid == null) throw const AuthException('Not logged in');
 
-      await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(uid)
-          .update({'username': username});
+      await _firestore.collection(AppConstants.usersCollection).doc(uid).update(
+        {'username': username},
+      );
     } on FirebaseException catch (e) {
       throw ServerException(e.message ?? 'Update failed');
     }
   }
 
+  // ── Update Profile (editable fields only) ──────────────────────────
   @override
-  Future<void> signOut() => _auth.signOut();
+  Future<void> updateProfile({
+    String? email,
+    String? city,
+    String? bloodType,
+    String? emergencyContact,
+  }) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw const AuthException('Not logged in');
+
+      // ✅ Only update fields that were provided
+      final updates = <String, dynamic>{};
+      if (email != null) updates['email'] = email;
+      if (city != null) updates['city'] = city;
+      if (bloodType != null) updates['bloodType'] = bloodType;
+      if (emergencyContact != null) {
+        updates['emergencyContact'] = emergencyContact;
+      }
+      updates['updatedAt'] = DateTime.now().toIso8601String();
+
+      if (updates.length > 1) {
+        // more than just updatedAt
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(uid)
+            .update(updates);
+      }
+    } on FirebaseException catch (e) {
+      throw ServerException(e.message ?? 'Update failed');
+    }
+  }
+
+  // ── Sign Out ────────────────────────────────────────────────────────
+  @override
+  Future<void> signOut() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await _firestore.collection(AppConstants.usersCollection).doc(uid).update(
+        {'fcmToken': ''},
+      );
+    }
+    await _auth.signOut();
+  }
 }

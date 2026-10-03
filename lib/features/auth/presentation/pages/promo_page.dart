@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 
+part '../widgets/promo/promo_slide.dart';
+part '../widgets/promo/promo_data.dart';
+
 class PromoPage extends StatefulWidget {
   const PromoPage({super.key});
 
@@ -69,7 +72,6 @@ class _PromoPageState extends State<PromoPage> {
       body: SafeArea(
         child: Column(
           children: [
-
             // ── Skip button ──────────────────────────────
             Align(
               alignment: Alignment.centerRight,
@@ -119,13 +121,15 @@ class _PromoPageState extends State<PromoPage> {
             // ── CTA Button ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimens.paddingLG),
+                horizontal: AppDimens.paddingLG,
+              ),
               child: ElevatedButton(
                 onPressed: _next,
                 child: Text(
-                  _currentPage == _pages.length - 1
-                      ? 'Get Started'
-                      : 'Next',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.background,
+                  ),
+                  _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
                 ),
               ),
             ),
@@ -166,63 +170,3 @@ class _PromoPageState extends State<PromoPage> {
 // ─────────────────────────────────────────────
 //  Slide Widget
 // ─────────────────────────────────────────────
-class _PromoSlide extends StatelessWidget {
-  final _PromoData data;
-  const _PromoSlide({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppDimens.paddingXL, vertical: AppDimens.paddingLG),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-
-          // Icon circle
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              color: data.color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(data.icon, size: 64, color: data.color),
-          ),
-
-          const SizedBox(height: 48),
-
-          Text(
-            data.title,
-            style: AppTextStyles.displayMedium.copyWith(height: 1.2),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            data.subtitle,
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PromoData {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  const _PromoData({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-  });
-}

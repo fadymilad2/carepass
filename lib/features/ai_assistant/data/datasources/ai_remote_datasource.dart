@@ -15,7 +15,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDataSource {
   final FirebaseFunctions _functions;
 
   AiRemoteDataSourceImpl({required FirebaseFunctions functions})
-      : _functions = functions;
+    : _functions = functions;
 
   @override
   Future<ChatMessageModel> analyzeSymptoms({
@@ -26,8 +26,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDataSource {
       // ── 1. Check auth ──────────────────────────────────────────────────
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw const ServerException(
-            'Session expired. Please login again.');
+        throw const ServerException('Session expired. Please login again.');
       }
 
       // ── 2. Refresh token ───────────────────────────────────────────────
@@ -54,18 +53,16 @@ class AiRemoteDataSourceImpl implements AiRemoteDataSource {
       // ── 4. Call Cloud Function ─────────────────────────────────────────
       final callable = _functions.httpsCallable(
         'aiHealthAssistant',
-        options: HttpsCallableOptions(
-          timeout: const Duration(seconds: 60),
-        ),
+        options: HttpsCallableOptions(timeout: const Duration(seconds: 60)),
       );
 
       final result = await callable.call<Map<String, dynamic>>({
         'message': buffer.toString(),
-        'userId':  user.uid,
+        'userId': user.uid,
       });
 
       // ── 5. Parse response ──────────────────────────────────────────────
-      final data    = result.data;
+      final data = result.data;
       final content = data['content'] as String? ?? '';
 
       if (content.isEmpty) {
@@ -73,7 +70,6 @@ class AiRemoteDataSourceImpl implements AiRemoteDataSource {
       }
 
       return ChatMessageModel.fromApiResponse(content);
-
     } on FirebaseFunctionsException catch (e) {
       // ✅ Map error codes to readable messages
       final msg = _mapFunctionError(e);

@@ -1,8 +1,17 @@
+import 'package:carepass/core/router/app_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../services/presentation/bloc/services_bloc.dart';
 import '../../domain/entities/provider_entities.dart';
+
+part '../widgets/provider_detail/badge.dart';
+part '../widgets/provider_detail/action_button.dart';
+part '../widgets/provider_detail/info_section.dart';
 
 class ProviderDetailPage extends StatefulWidget {
   final MedicalProvider provider;
@@ -24,7 +33,8 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
     final lat = widget.provider.latitude ?? 5.6037;
     final lng = widget.provider.longitude ?? -0.1870;
     final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -38,6 +48,15 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
     }
   }
 
+  void _onBookNow(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      context.push(AppRoutes.login);
+      return;
+    }
+    context.push(AppRoutes.bookNow, extra: widget.provider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = widget.provider;
@@ -46,7 +65,6 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-
           // ── Hero Image + AppBar ────────────────
           SliverAppBar(
             expandedHeight: 220,
@@ -54,36 +72,38 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
             backgroundColor: AppColors.surface,
             leading: IconButton(
               icon: Container(
-                width: 36, height: 36,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_back_ios_new,
-                    size: 16, color: AppColors.textPrimary),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 16,
+                  color: AppColors.textPrimary,
+                ),
               ),
               onPressed: () => context.pop(),
             ),
             actions: [
               IconButton(
                 icon: Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _isFavorite
-                        ? Icons.favorite
-                        : Icons.favorite_border,
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
                     size: 18,
                     color: _isFavorite
                         ? AppColors.error
                         : AppColors.textPrimary,
                   ),
                 ),
-                onPressed: () =>
-                    setState(() => _isFavorite = !_isFavorite),
+                onPressed: () => setState(() => _isFavorite = !_isFavorite),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -91,8 +111,11 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
                   ? Image.network(p.imageUrl, fit: BoxFit.cover)
                   : Container(
                       color: AppColors.primarySurface,
-                      child: const Icon(Icons.local_hospital,
-                          size: 80, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.local_hospital,
+                        size: 80,
+                        color: AppColors.primary,
+                      ),
                     ),
             ),
           ),
@@ -106,29 +129,30 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // Logo + Name
                     Row(
                       children: [
                         Container(
-                          width: 52, height: 52,
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
                             color: AppColors.primarySurface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: const Icon(Icons.local_hospital,
-                              color: AppColors.primary, size: 28),
+                          child: const Icon(
+                            Icons.local_hospital,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(p.name,
-                                  style: AppTextStyles.headlineSmall),
-                              Text(p.typeLabel,
-                                  style: AppTextStyles.bodySmall),
+                              Text(p.name, style: AppTextStyles.headlineSmall),
+                              Text(p.typeLabel, style: AppTextStyles.bodySmall),
                             ],
                           ),
                         ),
@@ -140,19 +164,20 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
                     // Rating + Distance
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            color: Colors.amber, size: 18),
+                        const Icon(Icons.star, color: Colors.amber, size: 18),
                         const SizedBox(width: 4),
                         Text(
                           '${p.rating} (${p.reviewCount} reviews)',
                           style: AppTextStyles.bodySmall,
                         ),
                         const Spacer(),
-                        const Icon(Icons.location_on_outlined,
-                            size: 14, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 2),
-                        Text(p.distanceLabel,
-                            style: AppTextStyles.bodySmall),
+                        Text(p.distanceLabel, style: AppTextStyles.bodySmall),
                       ],
                     ),
 
@@ -236,12 +261,16 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (p.workingHours.weekdays.isNotEmpty)
-                    Text(p.workingHours.weekdays,
-                        style: AppTextStyles.bodyMedium),
+                    Text(
+                      p.workingHours.weekdays,
+                      style: AppTextStyles.bodyMedium,
+                    ),
                   if (p.workingHours.friday.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(p.workingHours.friday,
-                        style: AppTextStyles.bodyMedium),
+                    Text(
+                      p.workingHours.friday,
+                      style: AppTextStyles.bodyMedium,
+                    ),
                   ],
                 ],
               ),
@@ -261,20 +290,25 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: p.services.take(6).map((s) =>
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(
-                              AppDimens.radiusFull),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Text(s,
-                            style: AppTextStyles.bodySmall),
-                      ),
-                    ).toList(),
+                    children: p.services
+                        .take(6)
+                        .map(
+                          (s) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(
+                                AppDimens.radiusFull,
+                              ),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Text(s, style: AppTextStyles.bodySmall),
+                          ),
+                        )
+                        .toList(),
                   ),
                   if (p.totalServices > 6) ...[
                     const SizedBox(height: 12),
@@ -292,17 +326,145 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
             ),
           ),
 
+          // ── Services Section ─────────────────────────────
+          SliverToBoxAdapter(
+            child: BlocProvider(
+              create: (context) =>
+                  sl<ServicesBloc>()..add(ServicesLoadByProvider(p.id)),
+              child: BlocBuilder<ServicesBloc, ServicesState>(
+                builder: (context, state) {
+                  if (state is ServicesLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is! ServicesLoaded || state.all.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppDimens.paddingMD,
+                          8,
+                          AppDimens.paddingMD,
+                          8,
+                        ),
+                        child: Text(
+                          'Available Services',
+                          style: AppTextStyles.headlineSmall,
+                        ),
+                      ),
+
+                      ...state.all.map(
+                        (service) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimens.paddingMD,
+                            vertical: 4,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(
+                                AppDimens.radiusMD,
+                              ),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primarySurface,
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimens.radiusSM,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    service.categoryIcon,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        service.name,
+                                        style: AppTextStyles.titleMedium,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        service.categoryLabel,
+                                        style: AppTextStyles.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primarySurface,
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimens.radiusFull,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${service.discountPercent}% off',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppDimens.paddingMD),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+
           // ── Book Now button spacing ────────────
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
 
       // ── Book Now ──────────────────────────────
+      // ابحث عن الـ bottomNavigationBar وبدّله بالكامل:
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: ElevatedButton(
-          onPressed: () {},
-          child: const Text('Book Now'),
+        child: ElevatedButton.icon(
+          onPressed: () => _onBookNow(context),
+          icon: const Icon(Icons.calendar_today_outlined, size: 18),
+          label: const Text('Book Now'),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
         ),
       ),
     );
@@ -312,107 +474,3 @@ class _ProviderDetailPageState extends State<ProviderDetailPage> {
 // ─────────────────────────────────────────────
 //  Badge
 // ─────────────────────────────────────────────
-class _Badge extends StatelessWidget {
-  final String label;
-  final Color color;
-  const _Badge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  Action Button
-// ─────────────────────────────────────────────
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppDimens.radiusMD),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 22),
-            const SizedBox(height: 4),
-            Text(label, style: AppTextStyles.labelSmall
-                .copyWith(fontWeight: FontWeight.w600)),
-            Text(subtitle,
-                style: AppTextStyles.labelSmall,
-                overflow: TextOverflow.ellipsis),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  Info Section
-// ─────────────────────────────────────────────
-class _InfoSection extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _InfoSection({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surface,
-      padding: const EdgeInsets.all(AppDimens.paddingMD),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(title, style: AppTextStyles.titleMedium),
-              const Spacer(),
-              Icon(icon, size: 18, color: AppColors.textSecondary),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
-    );
-  }
-}

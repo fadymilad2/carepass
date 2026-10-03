@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../bloc/auth_bloc.dart';
 
 class SplashPage extends StatefulWidget {
@@ -18,6 +17,8 @@ class _SplashPageState extends State<SplashPage>
   late final Animation<double> _fade;
   late final Animation<double> _scale;
 
+  bool _isAnimationDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -26,14 +27,45 @@ class _SplashPageState extends State<SplashPage>
       duration: const Duration(milliseconds: 1200),
     )..forward();
 
-    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-    _scale = Tween(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut),
-    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+    _scale = Tween(
+      begin: 0.7,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+
+    context.read<AuthBloc>().add(AuthCheckRequested());
 
     Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) context.read<AuthBloc>().add(AuthCheckRequested());
+      if (mounted) {
+        _isAnimationDone = true;
+        _checkAndNavigate(context.read<AuthBloc>().state);
+      }
     });
+  }
+
+  void _checkAndNavigate(AuthState state) {
+    if (!_isAnimationDone) return;
+
+    if (state is AuthNeedsProfile) {
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    if (state is AuthAuthenticated) {
+      context.go(AppRoutes.home);
+    }
+    // ✅ Fixed — was `context.go(AppRoutes.promo)`. Guests should
+    // land directly on Home and be able to browse providers,
+    // services, and discounts freely. Sign-in / OTP is now only
+    // ever triggered from AuthGate (e.g. when tapping the Card
+    // tab) or an explicit "Sign in" action — never forced at
+    // app launch. AppRoutes.promo is left defined and untouched
+    // in case it's still useful elsewhere (e.g. a "Learn More"
+    // entry point), it's just no longer the automatic landing
+    // spot for unauthenticated users.
+    if (state is AuthUnauthenticated) {
+      context.go(AppRoutes.home);
+    }
   }
 
   @override
@@ -45,38 +77,18 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated)   context.go(AppRoutes.home);
-        if (state is AuthUnauthenticated) context.go(AppRoutes.promo);
-      },
+      listener: (context, state) => _checkAndNavigate(state),
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: Colors.white,
         body: Center(
           child: FadeTransition(
             opacity: _fade,
             child: ScaleTransition(
               scale: _scale,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 88, height: 88,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: const Icon(Icons.favorite_rounded,
-                        color: Colors.white, size: 48),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('CarePass',
-                      style: AppTextStyles.displayMedium
-                          .copyWith(color: Colors.white, letterSpacing: 1)),
-                  const SizedBox(height: 8),
-                  Text('Quality Care for Less',
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: Colors.white70)),
-                ],
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 220,
+                fit: BoxFit.contain,
               ),
             ),
           ),

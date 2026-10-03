@@ -34,6 +34,31 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
+  // ✅ Fixed — now actually calls datasource
+  @override
+  Future<Either<Failure, void>> updateProfile({
+    String? email,
+    String? city,
+    String? bloodType,
+    String? emergencyContact,
+  }) async {
+    try {
+      await _remote.updateProfile(
+        email: email,
+        city: city,
+        bloodType: bloodType,
+        emergencyContact: emergencyContact,
+      );
+      return const Right(null);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Update failed: $e'));
+    }
+  }
+
   @override
   Future<Either<Failure, void>> signOut() async {
     try {
@@ -45,10 +70,5 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateEmail(String email) async =>
-      const Right(null);
-
-  @override
-  Future<Either<Failure, void>> deleteAccount() async =>
-      const Right(null);
+  Future<Either<Failure, void>> deleteAccount() async => const Right(null);
 }

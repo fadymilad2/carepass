@@ -1,0 +1,18 @@
+{
+  "score": 1,
+  "summary": "The new favorites block is owner-only, schema-validated on create and update, and emulator-tested. The overall inherited production rules retain a pre-existing critical entitlement boundary issue; this narrow provider-list fix does not certify or rewrite unrelated rules.",
+  "findings": [
+    {
+      "check": "Authority Source / Update Bypass",
+      "severity": "critical",
+      "issue": "Inherited production rules allow users unrestricted writes to their own profile and payment documents, including entitlement fields. This existed before the favorites fix; the broader local hardening rules have not been rolled out.",
+      "recommendation": "Reconcile the broader local hardening rules with production admin and collection workflows, then deploy with regression tests as a separate security change."
+    },
+    {
+      "check": "Business Logic vs. Rules",
+      "severity": "minor",
+      "issue": "Missing favorites permissions made the signed-in providers query fail. Fixed with owner-scoped list/read/delete and strict create/update validation.",
+      "recommendation": "Retain the emulator regression tests and reconcile this fix before future default rules deployments."
+    }
+  ]
+}

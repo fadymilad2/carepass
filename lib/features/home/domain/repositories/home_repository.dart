@@ -19,4 +19,11 @@ abstract class HomeRepository {
     required String userId,
     String? area,
   });
+  // ... جوه الـ abstract class HomeRepository
+  Future<Either<Failure, List<HomeServiceItem>>> getPopularServices(
+    String area,
+  );
+  Future<Either<Failure, List<HomeProviderItem>>> getNearbyProviders(
+    String area,
+  );
 }

@@ -25,6 +25,8 @@ class CardRepositoryImpl implements CardRepository {
 
   @override
   Future<Either<Failure, void>> renewCard(String planId) async {
-    return const Right(null);
+    return const Left(
+      ServerFailure('Renew your subscription through checkout.'),
+    );
   }
 }
