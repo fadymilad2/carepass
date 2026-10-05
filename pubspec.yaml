@@ -1,7 +1,7 @@
 name: carepass
-description: "A new Flutter project."
+description: "CarePass healthcare provider discovery and membership in Ghana."
 publish_to: 'none'
-version: 1.0.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.11.5
