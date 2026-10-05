@@ -23,8 +23,8 @@ The upload certificate identifies Fady. Public developer/seller names are set by
 
 ## Before submission
 
-- Verify the public support mailbox and privacy page. The values in the drafts come from the app, and the privacy URL has not been verified as publicly accessible.
-- Implement and test account deletion: `AccountRepositoryImpl.deleteAccount()` currently returns success without deleting anything.
+- Publish a real privacy page: the owner confirmed that the previous `/privacy` URL does not exist. Verify the public support mailbox as well.
+- Account deletion is implemented in the rebuilt AAB and its backend/rules were deployed after approval. All ten functions are active; unauthenticated rejection and automatic retries were verified. See `account-deletion.md`. A full deletion test used local emulators, not a real production account.
 - Review the provider rating display: the captured details screen shows `4.9 (0 reviews)`. Confirm the rating source and correct that inconsistency before using the captures publicly.
 - Complete Google Data safety, the health-app declaration, Apple App Privacy and age-rating questionnaires against actual app/backend behaviour and installed SDKs.
 - Test phone authentication with the new Firebase app registrations. Add Google Play's app-signing SHA-1/SHA-256 certificates after enrolling in Play App Signing; the upload certificate alone does not cover Play-installed builds.

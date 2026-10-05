@@ -12,6 +12,15 @@ class AccountLoading extends AccountState {}
 
 class AccountSignedOut extends AccountState {}
 
+class AccountDeleted extends AccountState {}
+
+class AccountDeletionFailed extends AccountLoaded {
+  final String message;
+  const AccountDeletionFailed(super.user, this.message);
+  @override
+  List<Object?> get props => [user, message];
+}
+
 class AccountLoaded extends AccountState {
   final AccountUser user;
   const AccountLoaded(this.user);

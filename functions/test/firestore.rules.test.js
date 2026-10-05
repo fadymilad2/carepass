@@ -20,6 +20,18 @@ before(async () => {
   });
 });
 after(async () => { await env?.cleanup(); });
+test('deletion markers block old sessions from reading or recreating private data', async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'account_deletions/deleted'), { status: 'completed' });
+    await setDoc(doc(context.firestore(), 'users/deleted/notifications/late'), { isRead: false });
+  });
+  const db = env.authenticatedContext('deleted').firestore();
+  await assertFails(setDoc(doc(db, 'users/deleted'), { username: 'Recreated' }));
+  await assertFails(getDoc(doc(db, 'users/deleted/notifications/late')));
+  await assertFails(setDoc(doc(db, 'users/deleted/favorites/p1'), { providerId: 'p1' }));
+  await assertFails(deleteDoc(doc(db, 'account_deletions/deleted')));
+  await assertFails(setDoc(doc(db, 'account_deletions/alice'), { status: 'pending' }));
+});
 test('users cannot read another account or its private subcollections', async () => {
   const db = env.authenticatedContext('bob').firestore();
   await assertFails(getDoc(doc(db, 'users/alice')));

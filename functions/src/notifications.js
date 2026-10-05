@@ -189,11 +189,10 @@ exports.triggerExpiryRemindersManually = onCall(
 
         remindersChecked++;
 
-        await db
-          .collection("users")
-          .doc(uid)
-          .collection("notifications")
-          .add({
+        const notificationRef = db.collection('users').doc(uid).collection('notifications').doc();
+        const notificationCreated = await db.runTransaction(async (tx) => {
+          if ((await tx.get(db.collection('account_deletions').doc(uid))).exists) return false;
+          tx.create(notificationRef, {
             title: "Subscription Expiring Soon",
             body: reminder.msg,
             type: "subscription_expiry",
@@ -201,6 +200,9 @@ exports.triggerExpiryRemindersManually = onCall(
             isRead: false,
             createdAt: new Date().toISOString(),
           });
+          return true;
+        });
+        if (!notificationCreated) continue;
 
         if (user.fcmToken) {
           try {

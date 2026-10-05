@@ -22,7 +22,7 @@ CarePass is a membership service, not health insurance. Provider availability, p
 
 Support: support@carepassghana.com
 Website: https://carepassghana.com
-Privacy policy: https://carepassghana.com/privacy
+
 
 Release notes:
 Welcome to CarePass. Explore healthcare providers, view membership options and access support in one app.

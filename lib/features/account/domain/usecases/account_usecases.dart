@@ -42,3 +42,10 @@ class AccountSignOut {
 
   Future<Either<Failure, void>> call() => repo.signOut();
 }
+
+class DeleteAccount {
+  final AccountRepository repo;
+  DeleteAccount(this.repo);
+
+  Future<Either<Failure, void>> call() => repo.deleteAccount();
+}

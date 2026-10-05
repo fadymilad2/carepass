@@ -2,7 +2,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret } = require('firebase-functions/params');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const crypto = require('node:crypto');
-const { quotePayment, fulfillPayment, subscriptionFields, validateDiscount } = require('./payment_service');
+const { quotePayment, fulfillPayment, subscriptionFields, validateDiscount, createPaymentOrder, requireAccountNotDeleting } = require('./payment_service');
 const paystackSecretKey = defineSecret('PAYSTACK_SECRET_KEY');
 const options = { cors: true, secrets: [paystackSecretKey], timeoutSeconds: 30 };
 function requireUser(request) {
@@ -29,7 +29,7 @@ exports.initializePaystackPayment = onCall(options, async (request) => {
     throw new HttpsError('failed-precondition', 'The price has changed. Reload your plan and try again.');
   }
   const reference = 'CP-' + crypto.randomUUID();
-  await db.collection('payment_orders').doc(reference).create({ ...order, status: 'pending', createdAt: new Date().toISOString() });
+  await createPaymentOrder(db, db.collection('payment_orders').doc(reference), { ...order, status: 'pending', createdAt: new Date().toISOString() });
   const payment = await paystack('transaction/initialize', {
     method: 'POST', body: JSON.stringify({ email, amount: order.amount, currency: order.currency, reference,
       metadata: { user_id: uid, plan_id: order.planId, app: 'CarePass' },
@@ -52,6 +52,7 @@ exports.activateFreeSubscription = onCall({ cors: true, timeoutSeconds: 30 }, as
   if (order.amount !== 0) throw new HttpsError('failed-precondition', 'This order requires payment.');
   const key = crypto.createHash('sha256').update(JSON.stringify([uid, order.planId, order.discountId])).digest('hex');
   await db.runTransaction(async (tx) => {
+    await requireAccountNotDeleting(db, tx, uid);
     const receipt = db.collection('payment_orders').doc(`free-${key}`);
     if ((await tx.get(receipt)).exists) return;
     const discountRef = order.discountId && db.collection('discount_codes').doc(order.discountId);

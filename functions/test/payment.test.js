@@ -35,6 +35,12 @@ function fakeDatabase() {
   return { collection, runTransaction: (callback) => callback(tx), records, writes: () => writes };
 }
 const payment = { reference: 'CP-123', status: 'success', amount: 12000, currency: 'GHS', metadata: { user_id: 'alice' } };
+test('payment completion cannot restore an account after deletion starts', async () => {
+  const db = fakeDatabase();
+  db.records.set('account_deletions/alice', { status: 'pending' });
+  await assert.rejects(fulfillPayment(db, payment, 'alice'), { code: 'failed-precondition' });
+  assert.equal(db.writes(), 0);
+});
 test('verification cannot activate another account', async () => {
   const db = fakeDatabase();
   await assert.rejects(fulfillPayment(db, payment, 'bob'), { code: 'permission-denied' });

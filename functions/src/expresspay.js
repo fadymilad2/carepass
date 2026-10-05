@@ -2,7 +2,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret, defineString } = require('firebase-functions/params');
 const { getFirestore } = require('firebase-admin/firestore');
 const crypto = require('node:crypto');
-const { quotePayment, fulfillPayment } = require('./payment_service');
+const { quotePayment, fulfillPayment, createPaymentOrder } = require('./payment_service');
 const { createExpressPayClient, normalizeQuery } = require('./expresspay_client');
 
 const merchantId = defineSecret('EXPRESSPAY_MERCHANT_ID');
@@ -66,7 +66,7 @@ exports.initializeExpressPayPayment = onCall(options, async (request) => {
   const functionBase = `https://us-central1-${projectId}.cloudfunctions.net`;
   const reference = 'CP-' + crypto.randomUUID();
   const orderRef = db.collection('payment_orders').doc(reference);
-  await orderRef.create({ ...order, provider: 'expresspay', environment: currentEnvironment,
+  await createPaymentOrder(db, orderRef, { ...order, provider: 'expresspay', environment: currentEnvironment,
     status: 'pending', createdAt: new Date().toISOString() });
   const parts = name.split(/\s+/);
   const payment = await provider.submit({

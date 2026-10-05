@@ -1,7 +1,7 @@
 {
   "name": "carepass-functions",
   "scripts": {
-    "test": "node --test test/payment.test.js test/expresspay.test.js",
+    "test": "node --test test/payment.test.js test/expresspay.test.js test/account_deletion.test.js",
     "test:rules": "node --test test/firestore.rules.test.js",
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",

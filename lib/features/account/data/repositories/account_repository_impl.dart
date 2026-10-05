@@ -70,5 +70,20 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteAccount() async => const Right(null);
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      await _remote.deleteAccount();
+      return const Right(null);
+    } on AuthException catch (error) {
+      return Left(AuthFailure(error.message));
+    } on ServerException catch (error) {
+      return Left(ServerFailure(error.message));
+    } catch (_) {
+      return const Left(
+        ServerFailure(
+          'Account deletion was not confirmed. Please retry or contact support.',
+        ),
+      );
+    }
+  }
 }

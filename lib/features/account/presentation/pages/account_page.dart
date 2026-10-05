@@ -63,6 +63,23 @@ class _AccountPageState extends State<AccountPage> {
           backgroundColor: AppColors.background,
           body: BlocConsumer<AccountBloc, AccountState>(
             listener: (context, state) {
+              if (state is AccountDeleted) {
+                context.read<AuthBloc>().add(AuthSignOutRequested());
+                context.go(AppRoutes.promo);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Your account has been deleted.'),
+                  ),
+                );
+              }
+              if (state is AccountDeletionFailed) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
               if (state is AccountSignedOut) {
                 context.read<AuthBloc>().add(AuthSignOutRequested());
                 context.go(AppRoutes.promo);

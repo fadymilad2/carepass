@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -15,17 +16,44 @@ abstract class AccountRemoteDataSource {
     String? emergencyContact,
   });
   Future<void> signOut();
+  Future<void> deleteAccount();
 }
 
 class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final FirebaseFunctions _functions;
 
   AccountRemoteDataSourceImpl({
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
+    required FirebaseFunctions functions,
   }) : _firestore = firestore,
-       _auth = auth;
+       _auth = auth,
+       _functions = functions;
+
+  @override
+  Future<void> deleteAccount() async {
+    if (_auth.currentUser == null) {
+      throw const AuthException('Sign in before deleting your account.');
+    }
+    try {
+      final result = await _functions
+          .httpsCallable(
+            'deleteMyAccount',
+            options: HttpsCallableOptions(timeout: const Duration(minutes: 9)),
+          )
+          .call<Map<String, dynamic>>({'confirm': true});
+      if (result.data['deleted'] != true) {
+        throw const ServerException('Account deletion was not confirmed.');
+      }
+      await _auth.signOut();
+    } on FirebaseFunctionsException catch (error) {
+      throw ServerException(
+        error.message ?? 'Unable to delete your account. Please retry.',
+      );
+    }
+  }
 
   // ── Get Account User ────────────────────────────────────────────────
   @override

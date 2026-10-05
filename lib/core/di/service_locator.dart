@@ -171,6 +171,7 @@ void _registerAccount() {
     () => AccountRemoteDataSourceImpl(
       firestore: FirebaseFirestore.instance,
       auth: FirebaseAuth.instance,
+      functions: FirebaseFunctions.instance,
     ),
   );
   sl.registerLazySingleton<AccountRepository>(
@@ -180,6 +181,7 @@ void _registerAccount() {
   sl.registerLazySingleton(() => UpdateUsername(sl()));
   sl.registerLazySingleton(() => UpdateProfile(sl())); // ✅ New
   sl.registerLazySingleton(() => AccountSignOut(sl()));
+  sl.registerLazySingleton(() => DeleteAccount(sl()));
 
   sl.registerFactory(
     () => AccountBloc(
@@ -187,6 +189,7 @@ void _registerAccount() {
       updateUsername: sl(),
       updateProfile: sl(), // ✅ New
       signOut: sl(),
+      deleteAccount: sl(),
     ),
   );
 }

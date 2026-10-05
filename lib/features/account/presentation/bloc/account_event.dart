@@ -9,6 +9,8 @@ class AccountLoadRequested extends AccountEvent {}
 
 class AccountSignOutRequested extends AccountEvent {}
 
+class AccountDeleteRequested extends AccountEvent {}
+
 class AccountUsernameUpdateRequested extends AccountEvent {
   final String username;
   AccountUsernameUpdateRequested(this.username);

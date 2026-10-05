@@ -1,6 +1,19 @@
 const { HttpsError } = require('firebase-functions/v2/https');
 const { FieldValue } = require('firebase-admin/firestore');
 
+async function requireAccountNotDeleting(db, tx, uid) {
+  if ((await tx.get(db.collection('account_deletions').doc(uid))).exists) {
+    throw new HttpsError('failed-precondition', 'Account deletion is in progress.');
+  }
+}
+
+async function createPaymentOrder(db, ref, order) {
+  await db.runTransaction(async (tx) => {
+    await requireAccountNotDeleting(db, tx, order.uid);
+    tx.create(ref, order);
+  });
+}
+
 function payableAmount(price, discount) {
   if (!Number.isFinite(price) || price < 0) throw new HttpsError('failed-precondition', 'Invalid plan price.');
   let reduction = 0;
@@ -76,6 +89,7 @@ async function fulfillPayment(db, payment, callerUid) {
     const doc = await tx.get(orderRef);
     if (!doc.exists) throw new HttpsError('not-found', 'Payment order not found.');
     const order = doc.data();
+    await requireAccountNotDeleting(db, tx, order.uid);
     if ((order.provider || 'paystack') !== (payment.provider || 'paystack') ||
         (order.provider === 'expresspay' && (payment.providerToken !== order.providerToken || payment.environment !== order.environment))) {
       throw new HttpsError('failed-precondition', 'Payment provider does not match the order.');
@@ -100,4 +114,4 @@ async function fulfillPayment(db, payment, callerUid) {
     return true;
   });
 }
-module.exports = { payableAmount, validateDiscount, quotePayment, fulfillPayment, subscriptionFields };
+module.exports = { payableAmount, validateDiscount, quotePayment, fulfillPayment, subscriptionFields, createPaymentOrder, requireAccountNotDeleting };

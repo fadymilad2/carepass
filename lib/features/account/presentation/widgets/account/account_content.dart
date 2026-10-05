@@ -28,6 +28,12 @@ class _AccountContent extends StatelessWidget {
                   onTap: () => _showEditProfile(context, user),
                 ),
                 _MenuItem(
+                  icon: Icons.delete_forever_outlined,
+                  label: 'Delete Account',
+                  color: AppColors.error,
+                  onTap: () => _confirmDeletion(context),
+                ),
+                _MenuItem(
                   icon: Icons.credit_card_outlined,
                   label: 'My Card',
                   onTap: () => context.go(AppRoutes.card),
@@ -140,6 +146,40 @@ class _AccountContent extends StatelessWidget {
   }
 
   // ✅ Star Rating Dialog
+  Future<void> _confirmDeletion(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Permanently delete account?'),
+        content: const Text(
+          'This removes your sign-in account, profile, family details, membership, '
+          'favorites, notifications and payment records stored by CarePass. '
+          'You will lose access to your membership. This cannot be undone and does '
+          'not issue a refund or delete records held by payment providers. '
+          'A minimal deletion-status record is kept to prevent account data from '
+          'being recreated. For your security, sign in again first if your last '
+          'sign-in was more than five minutes ago.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Delete permanently',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      context.read<AccountBloc>().add(AccountDeleteRequested());
+    }
+  }
+
   void _showRateDialog(BuildContext outerContext) {
     showDialog(
       context: outerContext,
